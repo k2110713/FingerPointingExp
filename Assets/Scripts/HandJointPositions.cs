@@ -157,8 +157,10 @@ public class HandJointPositions : MonoBehaviour
                 bone = thumb.Bone((Bone.BoneType)2);
                 Vector3 thumbPos = bone.NextJoint;
 
-                Debug.Log((midFinPos1 - thumbPos).sqrMagnitude * 1000);
-                distanceText.text = ((midFinPos1 - thumbPos).sqrMagnitude * 1000).ToString();
+                //Debug.Log((midFinPos1 - thumbPos).sqrMagnitude * 1000);
+                distanceText.text = 
+                    "thumb - mid1: " + ((midFinPos1 - thumbPos).sqrMagnitude * 1000).ToString() +
+                    "\nthumb - mid2: " + ((midFinPos2 - thumbPos).sqrMagnitude * 1000).ToString();
                 /*if((midFinPos1 - thumbPos).sqrMagnitude * 1000 < 1.5)
                 {
                     MouseDown(poiPos2dMean);
