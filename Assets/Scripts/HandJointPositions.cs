@@ -5,6 +5,8 @@ using System;
 using UnityEngine.EventSystems;
 using static UnityEngine.GraphicsBuffer;
 using System.Runtime.CompilerServices;
+using UnityEngine.UI;
+using TMPro;
 
 public class HandJointPositions : MonoBehaviour
 {
@@ -14,6 +16,8 @@ public class HandJointPositions : MonoBehaviour
     
     //ポインタオブジェクト(2次元)
     public GameObject pointer2d;
+    //テキスト
+    public TextMeshProUGUI distanceText;
     //ラインオブジェクト
     //LineRenderer linerend;
     //ポインタオブジェクト(3次元)
@@ -47,6 +51,8 @@ public class HandJointPositions : MonoBehaviour
         new Vector3(0f, 0f, 0f)
         };
     Vector3 poiPos2dMean = new Vector3();
+    //2Dポインタ中心調整用
+    float difX = 0, difY = 0;
     //3Dから2Dへの変換定数
     float sx;
     float sy;
@@ -126,9 +132,15 @@ public class HandJointPositions : MonoBehaviour
                 }
                 poiPos2dMean /= 5;
 
+                if (Input.GetKey(KeyCode.Space))
+                {
+                    difX = poiPos2dMean.x;
+                    difY = poiPos2dMean.y;
+                }
+
                 //2Dポインタの座標を変更
                 //pointer2d.transform.localPosition = poiPos2d[4];
-                pointer2d.transform.localPosition = poiPos2dMean;
+                pointer2d.transform.localPosition = new Vector3(poiPos2dMean.x - difX, poiPos2dMean.y - difY, poiPos2dMean.z);
 
                 // 中指を取得
                 Finger middleFinger = hand.Fingers[(int)Finger.FingerType.TYPE_MIDDLE];
@@ -146,6 +158,7 @@ public class HandJointPositions : MonoBehaviour
                 Vector3 thumbPos = bone.NextJoint;
 
                 Debug.Log((midFinPos1 - thumbPos).sqrMagnitude * 1000);
+                distanceText.text = ((midFinPos1 - thumbPos).sqrMagnitude * 1000).ToString();
                 /*if((midFinPos1 - thumbPos).sqrMagnitude * 1000 < 1.5)
                 {
                     MouseDown(poiPos2dMean);
@@ -157,6 +170,8 @@ public class HandJointPositions : MonoBehaviour
             }
         }
     }
+
+
 
     void MouseDown(Vector2 screenPosition)
     {
