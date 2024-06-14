@@ -7,6 +7,9 @@ using static UnityEngine.GraphicsBuffer;
 using System.Runtime.CompilerServices;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
+using System.Collections;
+using Unity.VisualScripting;
 
 public class HandJointPositions : MonoBehaviour
 {
@@ -18,6 +21,7 @@ public class HandJointPositions : MonoBehaviour
     public GameObject pointer2d;
     //テキスト
     public TextMeshProUGUI distanceText;
+    public TextMeshProUGUI accelerationText;
     //ラインオブジェクト
     //LineRenderer linerend;
     //ポインタオブジェクト(3次元)
@@ -41,21 +45,75 @@ public class HandJointPositions : MonoBehaviour
     float a, b, c, d;
     //3Dポインタ座標
     Vector3 poiPos3d = new Vector3();
-    //2Dポインタ座標
-    Vector3[] poiPos2d = 
-        new[] { 
+    //2Dポインタ座標(5個平均)
+    Vector3[] poiPos2d =
+        new[] {
         new Vector3(0f, 0f, 0f),
         new Vector3(0f, 0f, 0f),
-        new Vector3(0f, 0f, 0f), 
+        new Vector3(0f, 0f, 0f),
         new Vector3(0f, 0f, 0f),
         new Vector3(0f, 0f, 0f)
         };
     Vector3 poiPos2dMean = new Vector3();
+    //2Dポインタ座標(10個平均)
+    Vector3[] poiPos2d20 =
+        new[] {
+        new Vector3(0f, 0f, 0f),
+        new Vector3(0f, 0f, 0f),
+        new Vector3(0f, 0f, 0f),
+        new Vector3(0f, 0f, 0f),
+        new Vector3(0f, 0f, 0f),
+        new Vector3(0f, 0f, 0f),
+        new Vector3(0f, 0f, 0f),
+        new Vector3(0f, 0f, 0f),
+        new Vector3(0f, 0f, 0f),
+        new Vector3(0f, 0f, 0f),
+        new Vector3(0f, 0f, 0f),
+        new Vector3(0f, 0f, 0f),
+        new Vector3(0f, 0f, 0f),
+        new Vector3(0f, 0f, 0f),
+        new Vector3(0f, 0f, 0f),
+        new Vector3(0f, 0f, 0f),
+        new Vector3(0f, 0f, 0f),
+        new Vector3(0f, 0f, 0f),
+        new Vector3(0f, 0f, 0f),
+        new Vector3(0f, 0f, 0f)
+        };
+    public Vector3 poiPos2dMean20 = new Vector3();
     //2Dポインタ中心調整用
     float difX = 0, difY = 0;
     //3Dから2Dへの変換定数
     float sx;
     float sy;
+
+    //指間の距離
+    public float fingersDistance = 3.0f;
+    //指間の距離(5個平均)
+    float[] fingersDistances =
+        new[] {
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f,
+        0.0f
+        };
+
+    //前回の時間（微分用）
+    private float previousTime = 0.0f;
+    // センサデータの更新間隔
+    public float updateInterval = 0.1f;
+    //加速度の閾値
+    public float thresholdAcceleration = 5.0f;
+    //2回微分用データ
+    private float previousDistance1 = 0.0f;
+    private float previousDistance2 = 0.0f;
+
+    //チャタリング防止のためのクールダウンタイム
+    private bool isCooldown = false;
+    private float cooldownTime = 0.5f;
+
+    //決定動作のモード(0,1,2)
+    public int mode = 0;
 
     void Start()
     {
@@ -78,6 +136,9 @@ public class HandJointPositions : MonoBehaviour
         b = normal.y;
         c = normal.z;
         d = -(a * p1.x + b * p1.y + c * p1.z);
+
+        // 初期化
+        previousTime = Time.time;
     }
     void Update()
     {
@@ -122,25 +183,31 @@ public class HandJointPositions : MonoBehaviour
                 poiPos2d[4].x = poiPos3d.x * sx;
                 poiPos2d[4].y = poiPos3d.y * sy - displayY / 2;
                 poiPos2d[4].z = 0;
+                poiPos2d20[19] = poiPos2d[4];
 
                 //5回の平均をとる
                 poiPos2dMean = poiPos2d[0];
-                for(int i = 1; i < 5; i++)
+                for (int i = 1; i < 5; i++)
                 {
                     poiPos2dMean += poiPos2d[i];
                     poiPos2d[i - 1] = poiPos2d[i];
                 }
                 poiPos2dMean /= 5;
 
+                //20回の平均をとる
+                poiPos2dMean20 = poiPos2d20[0];
+                for (int i = 1; i < 20; i++)
+                {
+                    poiPos2dMean20 += poiPos2d20[i];
+                    poiPos2d20[i - 1] = poiPos2d20[i];
+                }
+                poiPos2dMean20 /= 20;
+
                 if (Input.GetKey(KeyCode.Space))
                 {
                     difX = poiPos2dMean.x;
                     difY = poiPos2dMean.y;
                 }
-
-                //2Dポインタの座標を変更
-                //pointer2d.transform.localPosition = poiPos2d[4];
-                pointer2d.transform.localPosition = new Vector3(poiPos2dMean.x - difX, poiPos2dMean.y - difY, poiPos2dMean.z);
 
                 // 中指を取得
                 Finger middleFinger = hand.Fingers[(int)Finger.FingerType.TYPE_MIDDLE];
@@ -157,69 +224,131 @@ public class HandJointPositions : MonoBehaviour
                 bone = thumb.Bone((Bone.BoneType)2);
                 Vector3 thumbPos = bone.NextJoint;
 
-                //Debug.Log((midFinPos1 - thumbPos).sqrMagnitude * 1000);
-                distanceText.text = 
-                    "thumb - mid1: " + ((midFinPos1 - thumbPos).sqrMagnitude * 1000).ToString() +
-                    "\nthumb - mid2: " + ((midFinPos2 - thumbPos).sqrMagnitude * 1000).ToString();
-                /*if((midFinPos1 - thumbPos).sqrMagnitude * 1000 < 1.5)
+                //2Dポインタの座標を変更
+                if((midFinPos1 - thumbPos).sqrMagnitude * 1000 > 2.0)
                 {
-                    MouseDown(poiPos2dMean);
+                    //中指と親指が離れている（5回平均の方を使う）
+                    //pointer2d.transform.localPosition = poiPos2d[4];
+                    pointer2d.transform.localPosition = new Vector3(poiPos2dMean.x - difX, poiPos2dMean.y - difY, poiPos2dMean.z);
                 }
                 else
                 {
-                    MouseUp(poiPos2dMean);
-                }*/
+                    //中指と親指が近い（10回平均の方を使う）
+                    pointer2d.transform.localPosition = new Vector3(poiPos2dMean20.x - difX, poiPos2dMean20.y - difY, poiPos2dMean20.z);
+                }
+
+                switch (mode)
+                {
+                    case 0:
+                        //親指の先と中指の第二関節の距離を計算（5回平均）
+                        fingersDistances[4] = (midFinPos1 - thumbPos).sqrMagnitude * 1000;
+                        fingersDistance = fingersDistances[0];
+                        for (int i = 1; i < 5; i++)
+                        {
+                            fingersDistance += fingersDistances[i];
+                            fingersDistances[i - 1] = fingersDistances[i];
+                        }
+                        fingersDistance /= 5;
+                        break;
+                    case 1:
+                        //親指の先と中指の先の距離を計算（5回平均）
+                        fingersDistances[4] = (midFinPos2 - thumbPos).sqrMagnitude * 1000;
+                        fingersDistance = fingersDistances[0];
+                        for (int i = 1; i < 5; i++)
+                        {
+                            fingersDistance += fingersDistances[i];
+                            fingersDistances[i - 1] = fingersDistances[i];
+                        }
+                        fingersDistance /= 5;
+                        break;
+                    case 2:
+                        //人差し指の先の奥行き距離を計算（5回平均）
+                        fingersDistances[4] = pos2.z * pos2.z * 1000;
+                        fingersDistance = fingersDistances[0];
+                        for (int i = 1; i < 5; i++)
+                        {
+                            fingersDistance += fingersDistances[i];
+                            fingersDistances[i - 1] = fingersDistances[i];
+                        }
+                        fingersDistance /= 5;
+                        break;
+                    default:
+                        break;
+                }
+                
+                distanceText.text = fingersDistance.ToString();
+
+                secondOrderDif(fingersDistance);
             }
         }
     }
 
-
-
-    void MouseDown(Vector2 screenPosition)
+    void secondOrderDif(float currentDistance)
     {
-        // スクリーン座標からワールド座標に変換
-        Vector3 worldPosition = mainCamera.ScreenToWorldPoint(new Vector3(screenPosition.x, screenPosition.y, mainCamera.nearClipPlane));
-
-        // マウスイベントをシミュレートするためのRaycast
-        Ray ray = new Ray(worldPosition, mainCamera.transform.forward);
-        RaycastHit hit;
-
-        if (Physics.Raycast(ray, out hit))
+        //2階微分して加速度で親指の動きを検知する
+        // 一定間隔でデータを更新
+        if (Time.time - previousTime >= updateInterval)
         {
-            // クリックイベントのデータを作成
-            PointerEventData pointerEventData = new PointerEventData(EventSystem.current)
-            {
-                pointerId = -1,
-                position = screenPosition,
-                clickTime = Time.time
-            };
+            // 1回微分（速度）を計算
+            float velocity1 = (currentDistance - previousDistance1) / updateInterval;
+            float velocity2 = (previousDistance1 - previousDistance2) / updateInterval;
 
-            // クリックイベントを送信
-            ExecuteEvents.Execute(hit.collider.gameObject, pointerEventData, ExecuteEvents.pointerDownHandler);
+            // 2回微分（加速度）を計算
+            float acceleration = (velocity1 - velocity2) / updateInterval;
+            accelerationText.text = acceleration.ToString();
+
+            // 加速度が閾値を超えた場合にボタンを押す処理
+            if (acceleration > thresholdAcceleration)
+            {
+                // レイキャスト用のデータを作成
+                PointerEventData pointerData = new PointerEventData(EventSystem.current)
+                {
+                    position = new Vector2(poiPos2dMean20.x + displayX / 2, poiPos2dMean20.y + displayY / 2)
+                };
+                Debug.Log(pointerData.position);
+
+                // レイキャスト結果を格納するリストを作成
+                List<RaycastResult> results = new List<RaycastResult>();
+
+                // レイキャストを実行
+                EventSystem.current.RaycastAll(pointerData, results);
+
+                // レイキャスト結果を確認
+                foreach (RaycastResult result in results)
+                {
+                    Debug.Log(result.ToString());
+                    // 結果がButtonコンポーネントを持つ場合
+                    Button button = result.gameObject.GetComponent<Button>();
+                    if (button != null)
+                    {
+                        doClick(result.gameObject, pointerData);
+                        Debug.Log("Button Pressed! Acceleration: " + acceleration);
+                    }
+                }
+            }
+
+            // 前回の距離データを更新
+            previousDistance2 = previousDistance1;
+            previousDistance1 = currentDistance;
+            previousTime = Time.time;
         }
     }
-
-    void MouseUp(Vector2 screenPosition)
+    private void doClick(GameObject gameObject, PointerEventData eventData)
     {
-        // スクリーン座標からワールド座標に変換
-        Vector3 worldPosition = mainCamera.ScreenToWorldPoint(new Vector3(screenPosition.x, screenPosition.y, mainCamera.nearClipPlane));
+        if (isCooldown) return;
+        StartCoroutine(Cooldown());
 
-        // マウスイベントをシミュレートするためのRaycast
-        Ray ray = new Ray(worldPosition, mainCamera.transform.forward);
-        RaycastHit hit;
-
-        if (Physics.Raycast(ray, out hit))
-        {
-            // クリックイベントのデータを作成
-            PointerEventData pointerEventData = new PointerEventData(EventSystem.current)
-            {
-                pointerId = -1,
-                position = screenPosition,
-                clickTime = Time.time
-            };
-
-            // クリックイベントを送信
-            ExecuteEvents.Execute(hit.collider.gameObject, pointerEventData, ExecuteEvents.pointerUpHandler);
-        }
+        ExecuteEvents.Execute<IPointerEnterHandler>(gameObject, eventData, (handler, ev) => handler.OnPointerEnter((PointerEventData)ev));
+        ExecuteEvents.Execute<IPointerDownHandler>(gameObject, eventData, (handler, ev) => handler.OnPointerDown((PointerEventData)ev));
+        ExecuteEvents.Execute<IPointerClickHandler>(gameObject, eventData, (handler, ev) => handler.OnPointerClick((PointerEventData)ev));
+        ExecuteEvents.Execute<IPointerUpHandler>(gameObject, eventData, (handler, ev) => handler.OnPointerUp((PointerEventData)ev));
+        ExecuteEvents.Execute<IPointerExitHandler>(gameObject, eventData, (handler, ev) => handler.OnPointerExit((PointerEventData)ev));
     }
+    private IEnumerator Cooldown()
+    {
+        isCooldown = true;
+        yield return new WaitForSeconds(cooldownTime);
+        isCooldown = false;
+    }
+
 }
