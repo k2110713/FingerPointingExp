@@ -11,7 +11,7 @@ using System.Collections.Generic;
 using System.Collections;
 using Unity.VisualScripting;
 
-public class HandJointPositions : MonoBehaviour
+public class OptiAndCopper : MonoBehaviour
 {
     public Camera mainCamera;
 
