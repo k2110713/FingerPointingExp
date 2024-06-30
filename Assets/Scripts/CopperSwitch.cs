@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -13,9 +14,6 @@ public class CopperSwitch : MonoBehaviour
     public GameObject pointer2d;
 
     public TextMeshProUGUI PushedOrNot;
-
-    //ボタンを押せた回数
-    public static int correctCount = 0;
 
     public RectTransform canvasRectTransform; // Canvas の RectTransform
     public RectTransform buttonRectTransform; // Button の RectTransform
@@ -38,7 +36,7 @@ public class CopperSwitch : MonoBehaviour
                 new string[] { "\n" }, System.StringSplitOptions.None);
         try
         {
-            Debug.Log(data[0]);//Unityのコンソールに受信データを表示
+            UnityEngine.Debug.Log(data[0]);//Unityのコンソールに受信データを表示
             if (data[0] == "1")
             {
                 // レイキャスト用のデータを作成
@@ -57,24 +55,32 @@ public class CopperSwitch : MonoBehaviour
                 // レイキャスト結果を確認
                 foreach (RaycastResult result in results)
                 {
-                    Debug.Log(result.ToString());
+                    UnityEngine.Debug.Log(result.ToString());
                     // 結果がButtonコンポーネントを持つ場合
                     Button button = result.gameObject.GetComponent<Button>();
                     if (button != null)
                     {
-                        PushedOrNot.text = "Pushed";
-                        Debug.Log("Pushed");
-                        correctCount++;
+                        //PushedOrNot.text = "Pushed";
+                        UnityEngine.Debug.Log("Pushed");
+                        Begin.correctCount++;
                         break;
                     }
                 }
-                Debug.Log(correctCount);
-                PlaceButtonRandomly();
+                Begin.cnt++;
+                UnityEngine.Debug.Log(Begin.correctCount.ToString() + Begin.cnt.ToString());
+                if (Begin.cnt < Begin.testNumInOnce)
+                {
+                    PlaceButtonRandomly();
+                }
+                else
+                {
+                    Begin.stopwatch.Stop();
+                }
             }
         }
         catch (System.Exception e)
         {
-            Debug.LogWarning(e.Message);//エラーを表示
+            UnityEngine.Debug.LogWarning(e.Message);//エラーを表示
         }
     }
 
@@ -99,6 +105,6 @@ public class CopperSwitch : MonoBehaviour
         float randomY = Random.Range(buttonHeight / 2, canvasHeight - buttonHeight / 2);
 
         // ボタンの位置を設定
-        buttonRectTransform.position = new Vector3(randomX, randomY, 1);
+        buttonRectTransform.position = new Vector3(randomX, randomY, 0);
     }
 }

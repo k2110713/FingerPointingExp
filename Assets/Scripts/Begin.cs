@@ -10,6 +10,12 @@ public class Begin : MonoBehaviour
     public int practiceNum = 1;
     public int testNum = 5;
     public static int[] modes = { 0, 1, 2, 3 };
+    public static int cnt = 0;
+
+    //ƒ{ƒ^ƒ“‚ğ‰Ÿ‚¹‚½‰ñ”
+    public static int correctCount = 0;
+
+    public static int testNumInOnce = 10;
 
     // Start is called before the first frame update
     void Start()

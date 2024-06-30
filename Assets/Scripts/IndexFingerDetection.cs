@@ -28,8 +28,8 @@ public class IndexFingerDetection : MonoBehaviour
     public float displayY; //解像度Y
     public float displayWidth; //ディスプレイ幅
     public float displayHeight; //ディスプレイ高さ
-    public float displayDistanceY; //Leap Motion とディスプレイの距離
-    public float displayDistanceZ; //Leap Motion とディスプレイの距離
+    public float sensorPosY; //ディスプレイ下辺の中点からセンサの相対距離(高さ)
+    public float sensorPosZ; //ディスプレイ下辺の中点からセンサの相対距離(奥行)
 
     //ポインタ表示用の媒介変数
     float t = 0.0f;
@@ -85,8 +85,7 @@ public class IndexFingerDetection : MonoBehaviour
         //実験環境の定数を代入
         sx = displayX / displayWidth;
         sy = displayY / displayHeight;
-        p1.z = displayDistanceZ; p2.z = displayDistanceZ; p3.z = displayDistanceZ;
-        p1.y = displayDistanceY; p2.y = displayDistanceY; p3.y = displayDistanceY;
+        p1.z = sensorPosZ; p2.z = sensorPosZ; p3.z = sensorPosZ;
 
         // ベクトルABとACを計算
         Vector3 AB = p2 - p1;
@@ -142,7 +141,7 @@ public class IndexFingerDetection : MonoBehaviour
 
                 //2Dに座標変換
                 poiPos2d[4].x = poiPos3d.x * sx;
-                poiPos2d[4].y = poiPos3d.y * sy - displayY / 2;
+                poiPos2d[4].y = (poiPos3d.y + sensorPosY) * sy - displayY / 2;
                 poiPos2d[4].z = 0;
 
                 //5回の平均をとる
@@ -162,11 +161,14 @@ public class IndexFingerDetection : MonoBehaviour
 
                 Debug.Log("pointer: " + poiPos2dMean);
                 pointer2d.transform.localPosition = new Vector3(poiPos2dMean.x - difX, poiPos2dMean.y - difY, poiPos2dMean.z);
+
+                pushImaginaryButton(-pos2.z);
             }
         }
     }
 
-    void secondOrderDif(float currentDistance)
+    //人さし指でボタンを押す動作をした判定
+    void pushImaginaryButton(float currentDistance)
     {
         //2階微分して加速度で親指の動きを検知する
         // 一定間隔でデータを更新
@@ -187,9 +189,9 @@ public class IndexFingerDetection : MonoBehaviour
                 // レイキャスト用のデータを作成
                 PointerEventData pointerData = new PointerEventData(EventSystem.current)
                 {
-                    position = new Vector2(poiPos2dMean.x + displayX / 2, poiPos2dMean.y + displayY / 2)
+                    position = pointer2d.transform.position
                 };
-                Debug.Log(pointerData.position);
+                //Debug.Log(pointerData.position);
 
                 // レイキャスト結果を格納するリストを作成
                 List<RaycastResult> results = new List<RaycastResult>();
@@ -200,14 +202,14 @@ public class IndexFingerDetection : MonoBehaviour
                 // レイキャスト結果を確認
                 foreach (RaycastResult result in results)
                 {
-                    Debug.Log(result.ToString());
+                    UnityEngine.Debug.Log(result.ToString());
                     // 結果がButtonコンポーネントを持つ場合
                     Button button = result.gameObject.GetComponent<Button>();
                     if (button != null)
                     {
                         //PushedOrNot.text = "Pushed";
-                        Debug.Log("Pushed");
-                        pushCount++;
+                        UnityEngine.Debug.Log("Pushed");
+                        Begin.correctCount++;
                         break;
                     }
                 }
@@ -220,10 +222,10 @@ public class IndexFingerDetection : MonoBehaviour
         }
     }
 
-    private IEnumerator Cooldown()
+    /*private IEnumerator Cooldown()
     {
         isCooldown = true;
         yield return new WaitForSeconds(cooldownTime);
         isCooldown = false;
-    }
+    }*/
 }

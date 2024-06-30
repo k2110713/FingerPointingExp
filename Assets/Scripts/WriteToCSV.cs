@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Text;
+using Unity.VisualScripting;
 using UnityEngine;
 
 // csvに保存するためのコード
@@ -10,14 +11,18 @@ public class WriteToCSV : MonoBehaviour
     // System.IO
     private StreamWriter sw;
 
+    public GameObject pointer;
+
     //被験者の名前
     public string subjectName = "unknown";
+
+    private string fi;
 
     // Start is called before the first frame update
     void Start()
     {
         DateTime now = DateTime.Now;
-        string fi = Application.dataPath + "/results/" + now.ToString($"{now:yyyyMMdd}") + "_" + subjectName + ".csv";
+        fi = Application.dataPath + "/results/" + now.ToString($"{now:yyyyMMdd}") + "_" + subjectName + ".csv";
         Debug.Log(fi);
 
         //保存用のExcelを検索
@@ -26,25 +31,34 @@ public class WriteToCSV : MonoBehaviour
             Debug.Log("make");
             writeDataToFile(fi);
         }*/
-        writeDataToFile(fi);
-
     }
 
-    private void writeDataToFile(string fi)
+    private void Update()
     {
-        DateTime now = DateTime.Now;
         try
         {
             // ファイルを開く、false：上書き
             StreamWriter file = new StreamWriter(fi, true, Encoding.UTF8);
-            //ファイルに書き込む
-            for (int i = 0; i < 5; i++)
+            //ポインタの座標を書き込む
+            file.WriteLine(
+                Begin.stopwatch.ElapsedMilliseconds + "," +
+                Begin.cnt + "," + Begin.correctCount + "," +
+                pointer.transform.position.x + "," +
+                pointer.transform.position.y
+                );
+
+            //終了時
+            //if (Begin.cnt == 10) //通常
+            if (Input.GetKeyUp(KeyCode.Return)) //エンドレス
             {
-                file.WriteLine(now.ToString($"{now:yyyyMMddHHmmss}") + ",3ArashiKashiwagi," + "false");
+                //ファイルを閉じる
+                file.Close();
+                //終了
+                Debug.Log("quit");
+                Application.Quit();
             }
             //ファイルを閉じる
             file.Close();
-
         }
         catch (Exception e)
         {

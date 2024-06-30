@@ -219,10 +219,10 @@ MonoBehaviour:
   pointer2d: {fileID: 605280633}
   displayX: 1920
   displayY: 1080
-  displayWidth: 0.345
-  displayHeight: 0.245
-  displayDistanceY: 0
-  displayDistanceZ: 0
+  displayWidth: 0.6
+  displayHeight: 0.34
+  sensorPosY: -0.2
+  sensorPosZ: -0.4
   updateInterval: 0.1
   mode: 0
 --- !u!114 &123238866
@@ -237,6 +237,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 09b6975f739d15f4f9b8efa16922e60f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  pointer: {fileID: 605280633}
   subjectName: kashiwagi
 --- !u!1 &532463079
 GameObject:
