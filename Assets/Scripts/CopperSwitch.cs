@@ -13,16 +13,16 @@ public class CopperSwitch : MonoBehaviour
     //ポインタオブジェクト(2次元)
     public GameObject pointer2d;
 
-    public TextMeshProUGUI PushedOrNot;
+    //ボタン
+    public GameObject buttonObject;
 
-    public RectTransform canvasRectTransform; // Canvas の RectTransform
-    public RectTransform buttonRectTransform; // Button の RectTransform
+    public TextMeshProUGUI PushedOrNot;
 
     // Start is called before the first frame update
     void Start()
     {
         //ランダム配置
-        PlaceButtonRandomly();
+        buttonObject.GetComponent<PlaceButton>().PlaceButtonRandomly();
         //信号を受信したときに、そのメッセージの処理を行う
         serialHandler.OnDataReceived += OnDataReceived;
         PushedOrNot.text = "Not Pushed";
@@ -68,9 +68,10 @@ public class CopperSwitch : MonoBehaviour
                 }
                 Begin.cnt++;
                 UnityEngine.Debug.Log(Begin.correctCount.ToString() + Begin.cnt.ToString());
-                if (Begin.cnt < Begin.testNumInOnce)
+                //if (Begin.cnt < Begin.testNumInOnce)
+                if (true)
                 {
-                    PlaceButtonRandomly();
+                    buttonObject.GetComponent<PlaceButton>().PlaceButtonRandomly();
                 }
                 else
                 {
@@ -87,24 +88,5 @@ public class CopperSwitch : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-    }
-
-    public void PlaceButtonRandomly()
-    {
-        // Canvas のサイズを取得
-
-        float canvasWidth = canvasRectTransform.rect.width;
-        float canvasHeight = canvasRectTransform.rect.height;
-
-        // Button のサイズを取得
-        float buttonWidth = buttonRectTransform.rect.width;
-        float buttonHeight = buttonRectTransform.rect.height;
-
-        // ランダムな位置を計算 (ボタンが画面外に出ないように)
-        float randomX = Random.Range(buttonWidth / 2, canvasWidth - buttonWidth / 2);
-        float randomY = Random.Range(buttonHeight / 2, canvasHeight - buttonHeight / 2);
-
-        // ボタンの位置を設定
-        buttonRectTransform.position = new Vector3(randomX, randomY, 0);
     }
 }
