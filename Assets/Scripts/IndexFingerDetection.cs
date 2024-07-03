@@ -40,12 +40,11 @@ public class IndexFingerDetection : MonoBehaviour
     //public TextMeshProUGUI accelerationText;
 
     //実験環境に関する定数(全てメートル)
-    public float displayX; //解像度X
-    public float displayY; //解像度Y
-    public float displayWidth; //ディスプレイ幅
-    public float displayHeight; //ディスプレイ高さ
-    public float sensorPosY; //ディスプレイ下辺の中点からセンサの相対距離(高さ)
-    public float sensorPosZ; //ディスプレイ下辺の中点からセンサの相対距離(奥行)
+    public float pixelX = 1920; //解像度X
+    public float pixelY = 1080; //解像度Y
+
+    //空中像ディスプレイの位置取得のため
+    public GameObject display;
 
     //ポインタ表示用の媒介変数
     float t = 0.0f;
@@ -91,9 +90,9 @@ public class IndexFingerDetection : MonoBehaviour
     void Start()
     {
         //実験環境の定数を代入
-        sx = displayX / displayWidth;
-        sy = displayY / displayHeight;
-        p1.z = sensorPosZ; p2.z = sensorPosZ; p3.z = sensorPosZ;
+        sx = pixelX / display.transform.localScale.x;
+        sy = pixelY / display.transform.localScale.y;
+        p1.z = display.transform.position.z; p2.z = display.transform.position.z; p3.z = display.transform.position.z;
 
         // ベクトルABとACを計算
         Vector3 AB = p2 - p1;
@@ -122,7 +121,7 @@ public class IndexFingerDetection : MonoBehaviour
                 //人さし指
                 Finger indexFinger = hand.Fingers[(int)Finger.FingerType.TYPE_INDEX];
                 //人さし指の根本
-                Bone boneBase = indexFinger.Bone((Bone.BoneType)0);
+                Bone boneBase = indexFinger.Bone((Bone.BoneType)2);
                 Vector3 pos1 = boneBase.NextJoint;
                 //人さし指の先端
                 Bone boneTip = indexFinger.Bone((Bone.BoneType)3);
@@ -148,19 +147,20 @@ public class IndexFingerDetection : MonoBehaviour
                 pointer2d.transform.localPosition = new Vector3(poiPos2d.x - difX, poiPos2d.y - difY, poiPos2d.z);
 
                 pushImaginaryButton(-smoothedPos2.z);
+                pushButton(smoothedPos2.z);
             }
         }
     }
 
     //人さし指でボタンを押す動作をした判定
-    void pushImaginaryButton(float currentDistance)
+    void pushImaginaryButton(float zpos)
     {
         //2階微分して加速度で親指の動きを検知する
         // 一定間隔でデータを更新
         if (Time.time - previousTime >= updateInterval)
         {
             // 1回微分（速度）を計算
-            float velocity1 = (currentDistance - previousDistance1) / updateInterval;
+            float velocity1 = (zpos - previousDistance1) / updateInterval;
             float velocity2 = (previousDistance1 - previousDistance2) / updateInterval;
 
             // 2回微分（加速度）を計算
@@ -214,9 +214,14 @@ public class IndexFingerDetection : MonoBehaviour
 
             // 前回の距離データを更新
             previousDistance2 = previousDistance1;
-            previousDistance1 = currentDistance;
+            previousDistance1 = zpos;
             previousTime = Time.time;
         }
+    }
+
+    void pushButton(float zpos)
+    {
+
     }
 
     void AddToHistory(Vector3 pos, Queue<Vector3> history)
@@ -253,7 +258,7 @@ public class IndexFingerDetection : MonoBehaviour
 
         //2Dに座標変換
         poiPos2d.x = poiPos3d.x * sx;
-        poiPos2d.y = (poiPos3d.y + sensorPosY) * sy - displayY / 2;
+        poiPos2d.y = (poiPos3d.y - display.transform.position.y) * sy;
         poiPos2d.z = 0;
     }
 
