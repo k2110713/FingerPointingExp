@@ -236,12 +236,9 @@ MonoBehaviour:
   buttonObject: {fileID: 532463079}
   canvasRectTransform: {fileID: 1153843147}
   buttonRectTransform: {fileID: 532463080}
-  displayX: 1920
-  displayY: 1080
-  displayWidth: 0.27
-  displayHeight: 0.15
-  sensorPosY: -0.1
-  sensorPosZ: 0.25
+  pixelX: 1920
+  pixelY: 1080
+  display: {fileID: 189365429}
   difX: 0
   difY: 0
   updateInterval: 0.1

@@ -49,7 +49,7 @@ public class IndexFingerDetection : MonoBehaviour
     //ポインタ表示用の媒介変数
     float t = 0.0f;
 
-    //平面の3点(Leap Motion から displayDistance メートル離れた垂直平面)
+    //平面の3点（垂直）
     Vector3 p1 = new Vector3(0.0f, 0.0f, 0.0f);
     Vector3 p2 = new Vector3(1.0f, 0.0f, 0.0f);
     Vector3 p3 = new Vector3(0.0f, 1.0f, 0.0f);
@@ -86,6 +86,9 @@ public class IndexFingerDetection : MonoBehaviour
 
     //決定動作のモード(0：銅箔スイッチ、1：人さし指の動き)
     public int mode = 0;
+
+    //タッチ入力を認識するための変数
+    private float previousZpos = 0.0f;
 
     void Start()
     {
@@ -172,35 +175,19 @@ public class IndexFingerDetection : MonoBehaviour
             //if (Input.GetKeyUp(KeyCode.Return))
             //if (currentDistance < 1.5 && velocity1 < 0 && velocity2 > 0)
             {
-                // レイキャスト用のデータを作成
-                PointerEventData pointerData = new PointerEventData(EventSystem.current)
+                //ボタン上かどうか判定
+                if (IsButtonAtPosition(pointer2d.transform.position))
                 {
-                    position = pointer2d.transform.position
-                };
-                //Debug.Log(pointerData.position);
-
-                // レイキャスト結果を格納するリストを作成
-                List<RaycastResult> results = new List<RaycastResult>();
-
-                // レイキャストを実行
-                EventSystem.current.RaycastAll(pointerData, results);
-
-                // レイキャスト結果を確認
-                foreach (RaycastResult result in results)
-                {
-                    UnityEngine.Debug.Log(result.ToString());
-                    // 結果がButtonコンポーネントを持つ場合
-                    Button button = result.gameObject.GetComponent<Button>();
-                    if (button != null)
-                    {
-                        //PushedOrNot.text = "Pushed";
-                        UnityEngine.Debug.Log("Pushed");
-                        Begin.correctCount++;
-                        break;
-                    }
+                    //PushedOrNot.text = "Pushed";
+                    UnityEngine.Debug.Log("Pushed");
+                    Begin.correctCount++;
                 }
-                Begin.cnt++;
-                UnityEngine.Debug.Log(Begin.correctCount.ToString() + Begin.cnt.ToString());
+                else
+                {
+                    Begin.cnt++;
+                    UnityEngine.Debug.Log(Begin.correctCount.ToString() + Begin.cnt.ToString());
+                }
+
                 //if (Begin.cnt < Begin.testNumInOnce)
                 if (true)
                 {
@@ -221,8 +208,46 @@ public class IndexFingerDetection : MonoBehaviour
 
     void pushButton(float zpos)
     {
+        // 1つ前のフレームでは超えていないが、現在のフレームでは超えた場合
+        if (previousZpos <= display.transform.position.z && zpos > display.transform.position.z)
+        {
 
+        }
+
+        // 現在のzposを次のフレームのために保存
+        previousZpos = zpos;
     }
+
+    // 指定された座標にボタンが存在しているかどうかを確認する関数
+    bool IsButtonAtPosition(Vector3 position)
+    {
+        // レイキャスト用のデータを作成
+        PointerEventData pointerData = new PointerEventData(EventSystem.current)
+        {
+            position = position
+        };
+
+        // レイキャスト結果を格納するリストを作成
+        List<RaycastResult> results = new List<RaycastResult>();
+
+        // レイキャストを実行
+        EventSystem.current.RaycastAll(pointerData, results);
+
+        // レイキャスト結果を確認
+        foreach (RaycastResult result in results)
+        {
+            Button button = result.gameObject.GetComponent<Button>();
+            if (button != null)
+            {
+                // 指定された座標にボタンが存在する場合
+                return true;
+            }
+        }
+
+        // 指定された座標にボタンが存在しない場合
+        return false;
+    }
+
 
     void AddToHistory(Vector3 pos, Queue<Vector3> history)
     {
