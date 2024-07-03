@@ -16,17 +16,20 @@ public class CopperSwitch : MonoBehaviour
     //ボタン
     public GameObject buttonObject;
 
-    public TextMeshProUGUI PushedOrNot;
+    Stopwatch sw;
 
     // Start is called before the first frame update
     void Start()
     {
         //ランダム配置
         buttonObject.GetComponent<PlaceButton>().PlaceButtonRandomly();
-        //信号を受信したときに、そのメッセージの処理を行う
-        serialHandler.OnDataReceived += OnDataReceived;
-        PushedOrNot.text = "Not Pushed";
-        Begin.stopwatch.Start();
+
+        //指さし入力方法（押す動作）
+        if (Begin.modes[Begin.phase] == 2 || Begin.modes[Begin.phase] == 3)
+        {
+            serialHandler.OnDataReceived += OnDataReceived;
+            sw = Stopwatch.StartNew();
+        }
     }
 
     //受信した信号(message)に対する処理
@@ -39,35 +42,16 @@ public class CopperSwitch : MonoBehaviour
             UnityEngine.Debug.Log(data[0]);//Unityのコンソールに受信データを表示
             if (data[0] == "1")
             {
-                // レイキャスト用のデータを作成
-                PointerEventData pointerData = new PointerEventData(EventSystem.current)
+                //ボタン上かどうか判定
+                if (IsButtonAtPosition(pointer2d.transform.position))
                 {
-                    position = pointer2d.transform.position
-                };
-                //Debug.Log(pointerData.position);
-
-                // レイキャスト結果を格納するリストを作成
-                List<RaycastResult> results = new List<RaycastResult>();
-
-                // レイキャストを実行
-                EventSystem.current.RaycastAll(pointerData, results);
-
-                // レイキャスト結果を確認
-                foreach (RaycastResult result in results)
-                {
-                    UnityEngine.Debug.Log(result.ToString());
-                    // 結果がButtonコンポーネントを持つ場合
-                    Button button = result.gameObject.GetComponent<Button>();
-                    if (button != null)
-                    {
-                        //PushedOrNot.text = "Pushed";
-                        UnityEngine.Debug.Log("Pushed");
-                        Begin.correctCount++;
-                        break;
-                    }
+                    //PushedOrNot.text = "Pushed";
+                    UnityEngine.Debug.Log("Pushed");
+                    Begin.correctCount++;
                 }
                 Begin.cnt++;
                 UnityEngine.Debug.Log(Begin.correctCount.ToString() + Begin.cnt.ToString());
+
                 //if (Begin.cnt < Begin.testNumInOnce)
                 if (true)
                 {
@@ -76,6 +60,7 @@ public class CopperSwitch : MonoBehaviour
                 else
                 {
                     Begin.stopwatch.Stop();
+                    Begin.phase++;
                 }
             }
         }
@@ -83,6 +68,36 @@ public class CopperSwitch : MonoBehaviour
         {
             UnityEngine.Debug.LogWarning(e.Message);//エラーを表示
         }
+    }
+
+    // 指定された座標にボタンが存在しているかどうかを確認する関数
+    bool IsButtonAtPosition(Vector3 position)
+    {
+        // レイキャスト用のデータを作成
+        PointerEventData pointerData = new PointerEventData(EventSystem.current)
+        {
+            position = position
+        };
+
+        // レイキャスト結果を格納するリストを作成
+        List<RaycastResult> results = new List<RaycastResult>();
+
+        // レイキャストを実行
+        EventSystem.current.RaycastAll(pointerData, results);
+
+        // レイキャスト結果を確認
+        foreach (RaycastResult result in results)
+        {
+            Button button = result.gameObject.GetComponent<Button>();
+            if (button != null)
+            {
+                // 指定された座標にボタンが存在する場合
+                return true;
+            }
+        }
+
+        // 指定された座標にボタンが存在しない場合
+        return false;
     }
 
     // Update is called once per frame

@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -9,8 +10,9 @@ public class Begin : MonoBehaviour
     public static System.Diagnostics.Stopwatch stopwatch = new System.Diagnostics.Stopwatch();
     public int practiceNum = 1;
     public int testNum = 5;
-    public static int[] modes = { 0, 1, 2, 3 };
+    public static int[] modes = { 0, 1, 2, 3 }; // 0：タッチ、1：押す動作、2：親指と中指の先端、3：親指と中指の第二関節
     public static int cnt = 0;
+    public static int phase = 0;
 
     //ボタンを押せた回数
     public static int correctCount = 0;
