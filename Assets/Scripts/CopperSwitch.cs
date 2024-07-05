@@ -1,6 +1,8 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -16,6 +18,10 @@ public class CopperSwitch : MonoBehaviour
     //ボタン
     public GameObject buttonObject;
 
+    //クールダウンタイム
+    private bool isCooldown = false;
+    private float cooldownTime = 1.0f;
+
     Stopwatch sw;
 
     // Start is called before the first frame update
@@ -25,7 +31,7 @@ public class CopperSwitch : MonoBehaviour
         buttonObject.GetComponent<PlaceButton>().PlaceButtonRandomly();
 
         //指さし入力方法（押す動作）
-        if (Begin.modes[Begin.phase] == 2 || Begin.modes[Begin.phase] == 3)
+        if (Begin.modeStatic == 2 || Begin.modeStatic == 3)
         {
             serialHandler.OnDataReceived += OnDataReceived;
             sw = Stopwatch.StartNew();
@@ -46,21 +52,22 @@ public class CopperSwitch : MonoBehaviour
                 if (IsButtonAtPosition(pointer2d.transform.position))
                 {
                     //PushedOrNot.text = "Pushed";
-                    UnityEngine.Debug.Log("Pushed");
+                    //UnityEngine.Debug.Log("Pushed");
                     Begin.correctCount++;
                 }
                 Begin.cnt++;
-                UnityEngine.Debug.Log(Begin.correctCount.ToString() + Begin.cnt.ToString());
+                //UnityEngine.Debug.Log(Begin.correctCount.ToString() + Begin.cnt.ToString());
 
-                //if (Begin.cnt < Begin.testNumInOnce)
-                if (true)
+                if (Begin.cnt < Begin.testNumInOnce)
+                //if (true)
                 {
                     buttonObject.GetComponent<PlaceButton>().PlaceButtonRandomly();
                 }
                 else
                 {
                     Begin.stopwatch.Stop();
-                    Begin.phase++;
+                    Cooldown();
+                    buttonObject.SetActive(false);
                 }
             }
         }
@@ -103,5 +110,12 @@ public class CopperSwitch : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+    }
+
+    private IEnumerator Cooldown()
+    {
+        isCooldown = true;
+        yield return new WaitForSeconds(cooldownTime);
+        isCooldown = false;
     }
 }

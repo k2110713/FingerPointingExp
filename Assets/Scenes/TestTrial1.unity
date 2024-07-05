@@ -176,12 +176,16 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 11435192, guid: b9c7aaf0d314cb847a3b2a20e893f1b6, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 11435192, guid: b9c7aaf0d314cb847a3b2a20e893f1b6, type: 3}
       propertyPath: FOV_Visualization
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 11435192, guid: b9c7aaf0d314cb847a3b2a20e893f1b6, type: 3}
       propertyPath: _frameOptimization
-      value: 2
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 11435192, guid: b9c7aaf0d314cb847a3b2a20e893f1b6, type: 3}
       propertyPath: _interactionVolumeVisualization
@@ -236,8 +240,8 @@ MonoBehaviour:
   buttonObject: {fileID: 532463079}
   canvasRectTransform: {fileID: 1153843147}
   buttonRectTransform: {fileID: 532463080}
-  pixelX: 1920
-  pixelY: 1080
+  pixelX: 1366
+  pixelY: 768
   display: {fileID: 189365429}
   difX: 0
   difY: 0
@@ -258,7 +262,6 @@ MonoBehaviour:
   serialHandler: {fileID: 123238869}
   pointer2d: {fileID: 605280633}
   buttonObject: {fileID: 532463079}
-  PushedOrNot: {fileID: 1475156249}
 --- !u!114 &123238869
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -373,8 +376,8 @@ Transform:
   m_GameObject: {fileID: 189365429}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.1975, z: -0.25}
-  m_LocalScale: {x: 0.345, y: 0.195, z: 1}
+  m_LocalPosition: {x: 0, y: 0.1312, z: -0.2311}
+  m_LocalScale: {x: 0.243, y: 0.132, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -450,11 +453,11 @@ PrefabInstance:
     - target: {fileID: 5336407799788826744, guid: a4f31c9f6421beb42a81b0031924ff15, type: 3}
       propertyPath: _leapProvider
       value: 
-      objectReference: {fileID: 123238861}
+      objectReference: {fileID: 0}
     - target: {fileID: 5336407799867524940, guid: a4f31c9f6421beb42a81b0031924ff15, type: 3}
       propertyPath: _leapProvider
       value: 
-      objectReference: {fileID: 123238861}
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -498,7 +501,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 250, y: 250}
+  m_SizeDelta: {x: 184, y: 166}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &532463081
 MonoBehaviour:
@@ -698,7 +701,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pointer: {fileID: 605280633}
-  subjectName: onoda_thumb2
+  button: {fileID: 532463079}
+  subjectName: unknown
 --- !u!4 &1024413188
 Transform:
   m_ObjectHideFlags: 0
@@ -1306,8 +1310,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: PUSH
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 11700685827db964eb2813af109d400d, type: 2}
+  m_sharedMaterial: {fileID: 8671208659111897522, guid: 11700685827db964eb2813af109d400d, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1331,8 +1335,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 60
-  m_fontSizeBase: 60
+  m_fontSize: 48
+  m_fontSizeBase: 48
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 0

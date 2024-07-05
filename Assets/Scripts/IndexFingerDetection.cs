@@ -7,6 +7,8 @@ using TMPro;
 using System.Collections.Generic;
 using System.Collections;
 using System.Diagnostics;
+using UnityEngine.SceneManagement;
+using Unity.VisualScripting;
 
 public class IndexFingerDetection : MonoBehaviour
 {
@@ -81,22 +83,22 @@ public class IndexFingerDetection : MonoBehaviour
     private float previousDistance1 = 0.0f;
     private float previousDistance2 = 0.0f;
 
-    //チャタリング防止のためのクールダウンタイム
-    private bool isCooldown = false;
-    private float cooldownTime = 0.5f;
-
     //決定動作のモード(0：銅箔スイッチ、1：人さし指の動き)
     public int mode = 0;
 
     //タッチ入力を認識するための変数
     private float previousZpos = 0.0f;
 
+    //クールダウンタイム
+    private bool isCooldown = false;
+    private float cooldownTime = 1.0f;
+
     void Start()
     {
         //実験環境の定数を代入
         sx = pixelX / display.transform.localScale.x;
         sy = pixelY / display.transform.localScale.y;
-        p1.z = display.transform.position.z; p2.z = display.transform.position.z; p3.z = display.transform.position.z;
+        p1.z = -display.transform.position.z; p2.z = -display.transform.position.z; p3.z = -display.transform.position.z;
 
         // ベクトルABとACを計算
         Vector3 AB = p2 - p1;
@@ -114,7 +116,27 @@ public class IndexFingerDetection : MonoBehaviour
         // 初期化
         previousTime = Time.time;
 
-        if (Begin.modes[Begin.phase] == 0 || Begin.modes[Begin.phase] == 1)
+        Begin.cnt = 0;
+        Begin.correctCount = 0;
+
+        //実験者確認用
+        UnityEngine.Debug.Log(
+            "mode: " + Begin.modeStatic +
+            ", practice: " + Begin.practiceNum +
+            ", test: " + Begin.testNum +
+            ", current: " + Begin.currentNum
+            );
+
+        if (Begin.modeStatic == 0)
+        {
+            pointer2d.SetActive(false);
+        }
+        else
+        {
+            pointer2d.SetActive(true);
+        }
+
+        if (Begin.modeStatic == 0 || Begin.modeStatic == 1)
         {
             Begin.stopwatch = Stopwatch.StartNew();
         }
@@ -152,20 +174,33 @@ public class IndexFingerDetection : MonoBehaviour
                     difY = poiPos2d.y;
                 }
 
-                UnityEngine.Debug.Log("pointer: " + poiPos2d);
+                //UnityEngine.Debug.Log("pointer: " + poiPos2d);
                 pointer2d.transform.localPosition = new Vector3(poiPos2d.x - difX, poiPos2d.y - difY, poiPos2d.z);
 
                 //タッチ入力方法
-                if (Begin.modes[Begin.phase] == 0)
+                if (Begin.modeStatic == 0)
                 {
                     pushButton(smoothedPos2);
                 }
 
                 //指さし入力方法（押す動作）
-                if (Begin.modes[Begin.phase] == 1)
+                if (Begin.modeStatic == 1)
                 {
                     pushImaginaryButton(-smoothedPos2.z);
                 }
+            }
+        }
+
+        if (Input.GetKeyUp(KeyCode.Return) && Begin.cnt >= Begin.testNumInOnce)
+        {
+            if (Begin.currentNum == Begin.practiceNum + Begin.testNum)
+            {
+                Application.Quit();
+            }
+            else
+            {
+                Begin.currentNum++;
+                SceneManager.LoadScene("TestTrial1");
             }
         }
     }
@@ -186,7 +221,7 @@ public class IndexFingerDetection : MonoBehaviour
             accelerationText.text = acceleration.ToString();
 
             // 加速度が閾値を超えた場合にボタンを押す処理
-            if (acceleration > 5)
+            if (acceleration > 4)
             //if (Input.GetKeyUp(KeyCode.Return))
             //if (currentDistance < 1.5 && velocity1 < 0 && velocity2 > 0)
             {
@@ -194,21 +229,22 @@ public class IndexFingerDetection : MonoBehaviour
                 if (IsButtonAtPosition(pointer2d.transform.position))
                 {
                     //PushedOrNot.text = "Pushed";
-                    UnityEngine.Debug.Log("Pushed");
+                    //UnityEngine.Debug.Log("Pushed");
                     Begin.correctCount++;
                 }
                 Begin.cnt++;
-                UnityEngine.Debug.Log(Begin.correctCount.ToString() + Begin.cnt.ToString());
+                //UnityEngine.Debug.Log(Begin.correctCount.ToString() + Begin.cnt.ToString());
 
-                //if (Begin.cnt < Begin.testNumInOnce)
-                if (true)
+                if (Begin.cnt < Begin.testNumInOnce)
+                //if (true)
                 {
                     buttonObject.GetComponent<PlaceButton>().PlaceButtonRandomly();
                 }
                 else
                 {
                     Begin.stopwatch.Stop();
-                    Begin.phase++;
+                    Cooldown();
+                    buttonObject.SetActive(false);
                 }
             }
 
@@ -226,20 +262,21 @@ public class IndexFingerDetection : MonoBehaviour
         {
             if (IsButtonAtPosition(new Vector3(pos.x * sx, (pos.y - display.transform.position.y) * sy, 0)))
             {
-                UnityEngine.Debug.Log("Pushed");
+                //UnityEngine.Debug.Log("Pushed");
                 Begin.correctCount++;
             }
             Begin.cnt++;
-            UnityEngine.Debug.Log(Begin.correctCount.ToString() + Begin.cnt.ToString());
-            //if (Begin.cnt < Begin.testNumInOnce)
-            if (true)
+            //UnityEngine.Debug.Log(Begin.correctCount.ToString() + Begin.cnt.ToString());
+            if (Begin.cnt < Begin.testNumInOnce)
+            //if (true)
             {
                 buttonObject.GetComponent<PlaceButton>().PlaceButtonRandomly();
             }
             else
             {
                 Begin.stopwatch.Stop();
-                Begin.phase++;
+                Cooldown();
+                buttonObject.SetActive(false);
             }
         }
 
@@ -276,7 +313,6 @@ public class IndexFingerDetection : MonoBehaviour
         // 指定された座標にボタンが存在しない場合
         return false;
     }
-
 
     void AddToHistory(Vector3 pos, Queue<Vector3> history)
     {
