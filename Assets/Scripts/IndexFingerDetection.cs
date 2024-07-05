@@ -31,6 +31,7 @@ public class IndexFingerDetection : MonoBehaviour
 
     //ポインタオブジェクト(2次元)
     public GameObject pointer2d;
+    public GameObject midAirButton;
 
     //ボタン
     public GameObject buttonObject;
@@ -144,6 +145,7 @@ public class IndexFingerDetection : MonoBehaviour
 
     void Update()
     {
+        midAirButton.transform.position = new Vector3(buttonObject.transform.localPosition.x / sx, buttonObject.transform.localPosition.y / sy + display.transform.position.y, -0.232f);
         Frame frame = leapProvider.CurrentFrame;
         foreach (Hand hand in frame.Hands)
         {
@@ -152,7 +154,7 @@ public class IndexFingerDetection : MonoBehaviour
                 //人さし指
                 Finger indexFinger = hand.Fingers[(int)Finger.FingerType.TYPE_INDEX];
                 //人さし指の根本
-                Bone boneBase = indexFinger.Bone((Bone.BoneType)2);
+                Bone boneBase = indexFinger.Bone((Bone.BoneType)0);
                 Vector3 pos1 = boneBase.NextJoint;
                 //人さし指の先端
                 Bone boneTip = indexFinger.Bone((Bone.BoneType)3);
@@ -190,19 +192,6 @@ public class IndexFingerDetection : MonoBehaviour
                 }
             }
         }
-
-        if (Input.GetKeyUp(KeyCode.Return) && Begin.cnt >= Begin.testNumInOnce)
-        {
-            if (Begin.currentNum == Begin.practiceNum + Begin.testNum)
-            {
-                Application.Quit();
-            }
-            else
-            {
-                Begin.currentNum++;
-                SceneManager.LoadScene("TestTrial1");
-            }
-        }
     }
 
     //人さし指でボタンを押す動作をした判定
@@ -226,7 +215,7 @@ public class IndexFingerDetection : MonoBehaviour
             //if (currentDistance < 1.5 && velocity1 < 0 && velocity2 > 0)
             {
                 //ボタン上かどうか判定
-                if (IsButtonAtPosition(pointer2d.transform.position))
+                if (IsButtonAtPositionRay(pointer2d.transform.position))
                 {
                     //PushedOrNot.text = "Pushed";
                     //UnityEngine.Debug.Log("Pushed");
@@ -260,11 +249,19 @@ public class IndexFingerDetection : MonoBehaviour
         // 1つ前のフレームでは超えていないが、現在のフレームでは超えた場合
         if (previousZpos <= display.transform.position.z && pos.z > display.transform.position.z)
         {
-            if (IsButtonAtPosition(new Vector3(pos.x * sx, (pos.y - display.transform.position.y) * sy, 0)))
+            if (IsButtonAtPosition(pos))
             {
                 //UnityEngine.Debug.Log("Pushed");
                 Begin.correctCount++;
             }
+            /*if (IsButtonAtPosition(pos))
+            {
+                UnityEngine.Debug.Log("success"); 
+            }
+            else
+            {
+                UnityEngine.Debug.Log("failed");
+            }*/
             Begin.cnt++;
             //UnityEngine.Debug.Log(Begin.correctCount.ToString() + Begin.cnt.ToString());
             if (Begin.cnt < Begin.testNumInOnce)
@@ -284,8 +281,7 @@ public class IndexFingerDetection : MonoBehaviour
         previousZpos = pos.z;
     }
 
-    // 指定された座標にボタンが存在しているかどうかを確認する関数
-    bool IsButtonAtPosition(Vector3 position)
+    bool IsButtonAtPositionRay(Vector3 position)
     {
         // レイキャスト用のデータを作成
         PointerEventData pointerData = new PointerEventData(EventSystem.current)
@@ -311,6 +307,41 @@ public class IndexFingerDetection : MonoBehaviour
         }
 
         // 指定された座標にボタンが存在しない場合
+        return false;
+    }
+
+    // 指定された座標にボタンが存在しているかどうかを確認する関数
+    bool IsButtonAtPosition(Vector3 position)
+    {
+        // ボタンのRectTransformを取得
+        RectTransform buttonRectTransform = midAirButton.GetComponent<RectTransform>();
+
+        // ボタンの中心座標とサイズを取得
+        Vector3 buttonPosition = midAirButton.transform.localPosition;
+        Vector2 buttonScale = midAirButton.transform.localScale;
+
+        // ボタンの領域を計算
+        float buttonMinX = buttonPosition.x - buttonScale.x / 2;
+        float buttonMaxX = buttonPosition.x + buttonScale.x / 2;
+        float buttonMinY = buttonPosition.y - buttonScale.y / 2;
+        float buttonMaxY = buttonPosition.y + buttonScale.y / 2;
+        // デバッグログに変数を出力
+        /*UnityEngine.Debug.Log("Button Position: " + buttonPosition);
+        UnityEngine.Debug.Log("Button Scale: " + buttonScale);
+        UnityEngine.Debug.Log("Button MinX: " + buttonMinX);
+        UnityEngine.Debug.Log("Button MaxX: " + buttonMaxX);
+        UnityEngine.Debug.Log("Button MinY: " + buttonMinY);
+        UnityEngine.Debug.Log("Button MaxY: " + buttonMaxY);
+        UnityEngine.Debug.Log("Pointer Position: " + position);*/
+
+        // 指定された座標がボタンの領域内にあるかを確認
+        if (position.x >= buttonMinX && position.x <= buttonMaxX &&
+            position.y >= buttonMinY && position.y <= buttonMaxY)
+        {
+            return true;
+        }
+
+        // 指定された座標がボタンの領域外にある場合
         return false;
     }
 

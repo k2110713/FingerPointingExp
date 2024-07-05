@@ -20,6 +20,8 @@ public class WriteToCSV : MonoBehaviour
 
     private string fi;
 
+    private bool flg = true;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -48,6 +50,30 @@ public class WriteToCSV : MonoBehaviour
                     );
                 //ファイルを閉じる
                 file.Close();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message); // 例外検出時にエラーメッセージを表示
+            }
+        }
+        if (Begin.cnt == 10 && flg)
+        {
+            try
+            {
+                // ファイルを開く、false：上書き
+                StreamWriter file = new StreamWriter(fi, true, Encoding.UTF8);
+                //ポインタの座標を書き込む
+                file.WriteLine(
+                    Begin.stopwatch.ElapsedMilliseconds + "," +
+                    Begin.cnt + "," + Begin.correctCount + "," +
+                    //pointer.transform.position.x + "," +
+                    //pointer.transform.position.y + "," +
+                    Begin.modeStatic + "," + //入力モード
+                    (Begin.currentNum - 2) //テスト番号(1~5)
+                    );
+                //ファイルを閉じる
+                file.Close();
+                flg = false;
             }
             catch (Exception e)
             {

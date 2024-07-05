@@ -30,7 +30,7 @@ public class SerialHandler : MonoBehaviour
 
     void Update()
     {
-        if (isNewMessageReceived_)
+        if (isNewMessageReceived_ && isRunning_)
         {
             OnDataReceived(message_);
         }
@@ -57,7 +57,7 @@ public class SerialHandler : MonoBehaviour
         thread_.Start();
     }
 
-    private void Close()
+    public void Close()
     {
         isNewMessageReceived_ = false;
         isRunning_ = false;
