@@ -13,7 +13,7 @@ using Unity.VisualScripting;
 public class IndexFingerDetection : MonoBehaviour
 {
     // 平滑化のためのバッファサイズ
-    private const int BufferSize = 10;
+    private const int BufferSize = 8;
 
     // pos1とpos2の座標の履歴
     private Queue<Vector3> pos1History = new Queue<Vector3>();
@@ -210,7 +210,7 @@ public class IndexFingerDetection : MonoBehaviour
             accelerationText.text = acceleration.ToString();
 
             // 加速度が閾値を超えた場合にボタンを押す処理
-            if (acceleration > 4)
+            if (acceleration > 4 && acceleration < 7)
             //if (Input.GetKeyUp(KeyCode.Return))
             //if (currentDistance < 1.5 && velocity1 < 0 && velocity2 > 0)
             {
@@ -254,14 +254,6 @@ public class IndexFingerDetection : MonoBehaviour
                 //UnityEngine.Debug.Log("Pushed");
                 Begin.correctCount++;
             }
-            /*if (IsButtonAtPosition(pos))
-            {
-                UnityEngine.Debug.Log("success"); 
-            }
-            else
-            {
-                UnityEngine.Debug.Log("failed");
-            }*/
             Begin.cnt++;
             //UnityEngine.Debug.Log(Begin.correctCount.ToString() + Begin.cnt.ToString());
             if (Begin.cnt < Begin.testNumInOnce)

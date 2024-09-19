@@ -23,8 +23,6 @@ public class CopperSwitch : MonoBehaviour
     private bool isCooldown = false;
     private float cooldownTime = 1.0f;
 
-    Stopwatch sw;
-
     // Start is called before the first frame update
     void Start()
     {
@@ -35,7 +33,7 @@ public class CopperSwitch : MonoBehaviour
         if (Begin.modeStatic == 2 || Begin.modeStatic == 3)
         {
             serialHandler.OnDataReceived += OnDataReceived;
-            sw = Stopwatch.StartNew();
+            Begin.stopwatch = Stopwatch.StartNew();
         }
     }
 

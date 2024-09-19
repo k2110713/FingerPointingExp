@@ -18,7 +18,7 @@ public class Begin : MonoBehaviour
     //ƒ{ƒ^ƒ“‚ğ‰Ÿ‚¹‚½‰ñ”
     public static int correctCount = 0;
 
-    public static int testNumInOnce = 10;
+    public static int testNumInOnce = 1000000;
 
     // Start is called before the first frame update
     void Start()

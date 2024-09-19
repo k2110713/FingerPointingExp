@@ -26,8 +26,17 @@ public class WriteToCSV : MonoBehaviour
     void Start()
     {
         DateTime now = DateTime.Now;
-        fi = Application.dataPath + "/results/" + subjectName + "_" + Begin.modeStatic + "_" + now.ToString($"{now:yyyyMMdd}") + ".csv";
+        fi = Application.dataPath + "/results/" + subjectName + "_" + Begin.modeStatic + "_" + now.ToString("yyyyMMdd") + ".csv";
         Debug.Log(fi);
+
+        // ファイルが存在しない場合にヘッダー行を追加
+        if (!File.Exists(fi))
+        {
+            using (StreamWriter file = new StreamWriter(fi, false, Encoding.UTF8))
+            {
+                file.WriteLine("ElapsedMilliseconds,Count,CorrectCount,ModeStatic,TestNumber");
+            }
+        }
     }
 
     private void Update()
@@ -35,33 +44,23 @@ public class WriteToCSV : MonoBehaviour
         //本番フェーズで、ボタンがアクティブ（テスト中ということ）
         if (Begin.currentNum > Begin.practiceNum && button.activeSelf)
         {
-            try
-            {
-                // ファイルを開く、false：上書き
-                StreamWriter file = new StreamWriter(fi, true, Encoding.UTF8);
-                //ポインタの座標を書き込む
-                file.WriteLine(
-                    Begin.stopwatch.ElapsedMilliseconds + "," +
-                    Begin.cnt + "," + Begin.correctCount + "," +
-                    //pointer.transform.position.x + "," +
-                    //pointer.transform.position.y + "," +
-                    Begin.modeStatic + "," + //入力モード
-                    (Begin.currentNum - 2) //テスト番号(1~5)
-                    );
-                //ファイルを閉じる
-                file.Close();
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message); // 例外検出時にエラーメッセージを表示
-            }
+            WriteDataToCSV();
         }
+
         if (Begin.cnt == 10 && flg)
         {
-            try
+            WriteDataToCSV();
+            flg = false;
+        }
+    }
+
+    private void WriteDataToCSV()
+    {
+        try
+        {
+            // ファイルを開く、true：追記
+            using (StreamWriter file = new StreamWriter(fi, true, Encoding.UTF8))
             {
-                // ファイルを開く、false：上書き
-                StreamWriter file = new StreamWriter(fi, true, Encoding.UTF8);
                 //ポインタの座標を書き込む
                 file.WriteLine(
                     Begin.stopwatch.ElapsedMilliseconds + "," +
@@ -70,21 +69,17 @@ public class WriteToCSV : MonoBehaviour
                     //pointer.transform.position.y + "," +
                     Begin.modeStatic + "," + //入力モード
                     (Begin.currentNum - 2) //テスト番号(1~5)
-                    );
-                //ファイルを閉じる
-                file.Close();
-                flg = false;
+                );
             }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message); // 例外検出時にエラーメッセージを表示
-            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError(e.Message); // 例外検出時にエラーメッセージを表示
         }
     }
 
     private bool isExistsSaveFile(string fi)
     {
-        bool isExist = File.Exists(fi);
-        return isExist;
+        return File.Exists(fi);
     }
 }

@@ -377,8 +377,8 @@ Transform:
   m_GameObject: {fileID: 189365429}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.366, z: 0.15}
-  m_LocalScale: {x: 0.243, y: 0.132, z: 1}
+  m_LocalPosition: {x: 0, y: 0.356, z: 0.11}
+  m_LocalScale: {x: 0.243, y: 0.13, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -703,7 +703,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   pointer: {fileID: 605280633}
   button: {fileID: 532463079}
-  subjectName: sakamoto2
+  subjectName: unknown
 --- !u!4 &1024413188
 Transform:
   m_ObjectHideFlags: 0
