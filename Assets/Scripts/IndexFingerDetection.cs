@@ -1,14 +1,11 @@
+using System.Collections.Generic;
 using UnityEngine;
-using Leap;
-using Leap.Unity;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
-using System.Collections.Generic;
 using System.Collections;
 using System.Diagnostics;
 using UnityEngine.SceneManagement;
-using Unity.VisualScripting;
 
 public class IndexFingerDetection : MonoBehaviour
 {
@@ -25,7 +22,8 @@ public class IndexFingerDetection : MonoBehaviour
 
     public Camera mainCamera;
 
-    public LeapServiceProvider leapProvider;
+    // OptiTrackのクライアント
+    public OptitrackStreamingClient optitrackClient;
 
     public TextMeshProUGUI accelerationText;
 
@@ -38,10 +36,6 @@ public class IndexFingerDetection : MonoBehaviour
 
     public RectTransform canvasRectTransform; // Canvas の RectTransform
     public RectTransform buttonRectTransform; // Button の RectTransform
-
-    //テキスト
-    //public TextMeshProUGUI distanceText;
-    //public TextMeshProUGUI accelerationText;
 
     //実験環境に関する定数(全てメートル)
     public float pixelX = 1920; //解像度X
@@ -84,15 +78,16 @@ public class IndexFingerDetection : MonoBehaviour
     private float previousDistance1 = 0.0f;
     private float previousDistance2 = 0.0f;
 
-    //決定動作のモード(0：銅箔スイッチ、1：人さし指の動き)
-    public int mode = 0;
-
     //タッチ入力を認識するための変数
     private float previousZpos = 0.0f;
 
     //クールダウンタイム
     private bool isCooldown = false;
     private float cooldownTime = 1.0f;
+
+    // マーカーのID（OptiTrackでトラッキングする2つのポイント）
+    public int marker1ID = 1; // 指の根元に相当するマーカーID
+    public int marker2ID = 2; // 指の先端に相当するマーカーID
 
     void Start()
     {
@@ -116,131 +111,49 @@ public class IndexFingerDetection : MonoBehaviour
 
         // 初期化
         previousTime = Time.time;
-
-        Begin.cnt = 0;
-        Begin.correctCount = 0;
-
-        //実験者確認用
-        UnityEngine.Debug.Log(
-            "mode: " + Begin.modeStatic +
-            ", practice: " + Begin.practiceNum +
-            ", test: " + Begin.testNum +
-            ", current: " + Begin.currentNum
-            );
-
-        if (Begin.modeStatic == 0)
-        {
-            pointer2d.SetActive(false);
-        }
-        else
-        {
-            pointer2d.SetActive(true);
-        }
-
-        if (Begin.modeStatic == 0 || Begin.modeStatic == 1)
-        {
-            Begin.stopwatch = Stopwatch.StartNew();
-        }
     }
 
     void Update()
     {
-        midAirButton.transform.position = new Vector3(buttonObject.transform.localPosition.x / sx, buttonObject.transform.localPosition.y / sy + display.transform.position.y, -0.232f);
-        Frame frame = leapProvider.CurrentFrame;
-        foreach (Hand hand in frame.Hands)
+        if (optitrackClient == null)
         {
-            if (hand.IsRight)
-            {
-                //人さし指
-                Finger indexFinger = hand.Fingers[(int)Finger.FingerType.TYPE_INDEX];
-                //人さし指の根本
-                Bone boneBase = indexFinger.Bone((Bone.BoneType)0);
-                Vector3 pos1 = boneBase.NextJoint;
-                //人さし指の先端
-                Bone boneTip = indexFinger.Bone((Bone.BoneType)3);
-                Vector3 pos2 = boneTip.NextJoint;
-
-                // 履歴に座標を追加して平滑化を行う
-                AddToHistory(pos1, pos1History);
-                AddToHistory(pos2, pos2History);
-
-                smoothedPos1 = CalculateSmoothedPosition(pos1History);
-                smoothedPos2 = CalculateSmoothedPosition(pos2History);
-
-                // 平滑化された座標で以降の計算を実行
-                CalculatePointerPosition(smoothedPos1, smoothedPos2);
-
-                if (Input.GetKey(KeyCode.Space))
-                {
-                    difX = poiPos2d.x;
-                    difY = poiPos2d.y;
-                }
-
-                //UnityEngine.Debug.Log("pointer: " + poiPos2d);
-                pointer2d.transform.localPosition = new Vector3(poiPos2d.x - difX, poiPos2d.y - difY, poiPos2d.z);
-
-                //タッチ入力方法
-                if (Begin.modeStatic == 0)
-                {
-                    pushButton(smoothedPos2);
-                }
-
-                //指さし入力方法（押す動作）
-                if (Begin.modeStatic == 1)
-                {
-                    pushImaginaryButton(-smoothedPos2.z);
-                }
-            }
+            UnityEngine.Debug.LogError("OptitrackStreamingClient is not assigned.");
+            return;
         }
-    }
 
-    //人さし指でボタンを押す動作をした判定
-    void pushImaginaryButton(float zpos)
-    {
-        //2階微分して加速度で親指の動きを検知する
-        // 一定間隔でデータを更新
-        if (Time.time - previousTime >= updateInterval)
+        // マーカーの位置情報を取得
+        var marker1State = optitrackClient.GetLatestMarkerStates()[0];
+        var marker2State = optitrackClient.GetLatestMarkerStates()[1];
+
+        if (marker1State != null && marker2State != null)
         {
-            // 1回微分（速度）を計算
-            float velocity1 = (zpos - previousDistance1) / updateInterval;
-            float velocity2 = (previousDistance1 - previousDistance2) / updateInterval;
+            Vector3 pos1 = marker1State.Position;
+            Vector3 pos2 = marker2State.Position;
 
-            // 2回微分（加速度）を計算
-            float acceleration = (velocity1 - velocity2) / updateInterval;
-            accelerationText.text = acceleration.ToString();
+            // 履歴に座標を追加して平滑化を行う
+            AddToHistory(pos1, pos1History);
+            AddToHistory(pos2, pos2History);
 
-            // 加速度が閾値を超えた場合にボタンを押す処理
-            if (acceleration > 4 && acceleration < 7)
-            //if (Input.GetKeyUp(KeyCode.Return))
-            //if (currentDistance < 1.5 && velocity1 < 0 && velocity2 > 0)
+            smoothedPos1 = CalculateSmoothedPosition(pos1History);
+            smoothedPos2 = CalculateSmoothedPosition(pos2History);
+
+            // 平滑化された座標で以降の計算を実行
+            CalculatePointerPosition(smoothedPos1, smoothedPos2);
+
+            if (Input.GetKey(KeyCode.Space))
             {
-                //ボタン上かどうか判定
-                if (IsButtonAtPositionRay(pointer2d.transform.position))
-                {
-                    //PushedOrNot.text = "Pushed";
-                    //UnityEngine.Debug.Log("Pushed");
-                    Begin.correctCount++;
-                }
-                Begin.cnt++;
-                //UnityEngine.Debug.Log(Begin.correctCount.ToString() + Begin.cnt.ToString());
-
-                if (Begin.cnt < Begin.testNumInOnce)
-                //if (true)
-                {
-                    buttonObject.GetComponent<PlaceButton>().PlaceButtonRandomly();
-                }
-                else
-                {
-                    Begin.stopwatch.Stop();
-                    Cooldown();
-                    buttonObject.SetActive(false);
-                }
+                difX = poiPos2d.x;
+                difY = poiPos2d.y;
             }
 
-            // 前回の距離データを更新
-            previousDistance2 = previousDistance1;
-            previousDistance1 = zpos;
-            previousTime = Time.time;
+            pointer2d.transform.localPosition = new Vector3(poiPos2d.x - difX, poiPos2d.y - difY, poiPos2d.z);
+
+            //タッチ入力方法
+            pushButton(smoothedPos2);
+        }
+        else
+        {
+            UnityEngine.Debug.LogWarning("Marker data not available.");
         }
     }
 
@@ -251,13 +164,10 @@ public class IndexFingerDetection : MonoBehaviour
         {
             if (IsButtonAtPosition(pos))
             {
-                //UnityEngine.Debug.Log("Pushed");
                 Begin.correctCount++;
             }
             Begin.cnt++;
-            //UnityEngine.Debug.Log(Begin.correctCount.ToString() + Begin.cnt.ToString());
             if (Begin.cnt < Begin.testNumInOnce)
-            //if (true)
             {
                 buttonObject.GetComponent<PlaceButton>().PlaceButtonRandomly();
             }
@@ -273,67 +183,23 @@ public class IndexFingerDetection : MonoBehaviour
         previousZpos = pos.z;
     }
 
-    bool IsButtonAtPositionRay(Vector3 position)
-    {
-        // レイキャスト用のデータを作成
-        PointerEventData pointerData = new PointerEventData(EventSystem.current)
-        {
-            position = position
-        };
-
-        // レイキャスト結果を格納するリストを作成
-        List<RaycastResult> results = new List<RaycastResult>();
-
-        // レイキャストを実行
-        EventSystem.current.RaycastAll(pointerData, results);
-
-        // レイキャスト結果を確認
-        foreach (RaycastResult result in results)
-        {
-            Button button = result.gameObject.GetComponent<Button>();
-            if (button != null)
-            {
-                // 指定された座標にボタンが存在する場合
-                return true;
-            }
-        }
-
-        // 指定された座標にボタンが存在しない場合
-        return false;
-    }
-
-    // 指定された座標にボタンが存在しているかどうかを確認する関数
     bool IsButtonAtPosition(Vector3 position)
     {
-        // ボタンのRectTransformを取得
         RectTransform buttonRectTransform = midAirButton.GetComponent<RectTransform>();
 
-        // ボタンの中心座標とサイズを取得
         Vector3 buttonPosition = midAirButton.transform.localPosition;
         Vector2 buttonScale = midAirButton.transform.localScale;
 
-        // ボタンの領域を計算
         float buttonMinX = buttonPosition.x - buttonScale.x / 2;
         float buttonMaxX = buttonPosition.x + buttonScale.x / 2;
         float buttonMinY = buttonPosition.y - buttonScale.y / 2;
         float buttonMaxY = buttonPosition.y + buttonScale.y / 2;
-        // デバッグログに変数を出力
-        /*UnityEngine.Debug.Log("Button Position: " + buttonPosition);
-        UnityEngine.Debug.Log("Button Scale: " + buttonScale);
-        UnityEngine.Debug.Log("Button MinX: " + buttonMinX);
-        UnityEngine.Debug.Log("Button MaxX: " + buttonMaxX);
-        UnityEngine.Debug.Log("Button MinY: " + buttonMinY);
-        UnityEngine.Debug.Log("Button MaxY: " + buttonMaxY);
-        UnityEngine.Debug.Log("Pointer Position: " + position);*/
 
-        // 指定された座標がボタンの領域内にあるかを確認
         if (position.x >= buttonMinX && position.x <= buttonMaxX &&
             position.y >= buttonMinY && position.y <= buttonMaxY)
         {
             return true;
         }
-
-        // 指定された座標がボタンの領域外にある場合
         return false;
     }
 
@@ -341,7 +207,7 @@ public class IndexFingerDetection : MonoBehaviour
     {
         if (history.Count >= BufferSize)
         {
-            history.Dequeue(); // 古いデータを削除
+            history.Dequeue();
         }
         history.Enqueue(pos);
     }
@@ -349,6 +215,8 @@ public class IndexFingerDetection : MonoBehaviour
     Vector3 CalculateSmoothedPosition(Queue<Vector3> history)
     {
         Vector3 sum = Vector3.zero;
+
+
         foreach (Vector3 pos in history)
         {
             sum += pos;

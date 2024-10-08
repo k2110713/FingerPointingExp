@@ -1,93 +1,68 @@
-using System;
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
-using NaturalPoint.NatNetLib;
-using System.Net;
 
 public class OptitrackMarkerDisplay : MonoBehaviour
 {
-    // ƒT[ƒo[ƒAƒhƒŒƒX‚Æƒ[ƒJƒ‹ƒAƒhƒŒƒX
-    public string ServerAddress = "127.0.0.1";
-    public string LocalAddress = "127.0.0.1";
+    // Reference to the OptitrackStreamingClient in the scene
+    private OptitrackStreamingClient streamingClient;
 
-    // NatNetƒNƒ‰ƒCƒAƒ“ƒg
-    private NatNetClient m_client;
+    // A list to store the latest marker states
+    private List<OptitrackMarkerState> markerStates;
 
-    // ƒ}[ƒJ[‚ÌÅVó‘Ô‚ğ•Û‚·‚éƒfƒBƒNƒVƒ‡ƒiƒŠ
-    private Dictionary<Int32, OptitrackMarkerState> m_latestMarkerStates = new Dictionary<Int32, OptitrackMarkerState>();
+    // Dictionary to store marker ID and their corresponding spheres
+    private Dictionary<int, GameObject> markerSpheres = new Dictionary<int, GameObject>();
 
-    // ƒtƒŒ[ƒ€ƒf[ƒ^‚ÌƒƒbƒN
-    private object m_frameDataUpdateLock = new object();
+    void Start()
+    {
+        // Find the OptitrackStreamingClient in the scene
+        streamingClient = OptitrackStreamingClient.FindDefaultClient();
 
-    // XVˆ—
+        if (streamingClient == null)
+        {
+            Debug.LogError("OptitrackStreamingClient not found. Make sure it exists in the scene.");
+            return;
+        }
+
+        // Initialize the list for storing marker states
+        markerStates = new List<OptitrackMarkerState>();
+    }
+
     void Update()
     {
-        // ƒ}[ƒJ[‚ÌÀ•W‚ÆID‚ğ•\¦‚·‚éˆ—
-        lock (m_frameDataUpdateLock)
+        if (streamingClient == null)
         {
-            foreach (KeyValuePair<Int32, OptitrackMarkerState> markerEntry in m_latestMarkerStates)
+            return;
+        }
+
+        // Get the latest marker states from the streaming client
+        markerStates = streamingClient.GetLatestMarkerStates();
+
+        // Check if any marker data is available
+        if (markerStates == null || markerStates.Count == 0)
+        {
+            Debug.LogWarning("No markers tracked or no data received.");
+            return;
+        }
+
+        // Update marker positions and create spheres if necessary
+        UpdateMarkerSpheres();
+    }
+
+    void UpdateMarkerSpheres()
+    {
+        // Loop through each marker state
+        foreach (OptitrackMarkerState marker in markerStates)
+        {
+            // If a sphere for this marker ID doesn't exist, create one
+            if (!markerSpheres.ContainsKey(marker.Id))
             {
-                Debug.Log($"Marker ID: {markerEntry.Value.Id}, Position: {markerEntry.Value.Position}");
+                GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                sphere.transform.localScale = new Vector3(0.02f, 0.02f, 0.02f); // Set size of the sphere
+                markerSpheres[marker.Id] = sphere;
             }
+
+            // Update the sphere's position to the marker's position
+            markerSpheres[marker.Id].transform.position = marker.Position;
         }
-    }
-
-    // NatNetƒtƒŒ[ƒ€óM‚Ìˆ—
-    private void OnNatNetFrameReceived(object sender, NatNetClient.NativeFrameReceivedEventArgs eventArgs)
-    {
-        IntPtr pFrame = eventArgs.NativeFramePointer;
-        NatNetError result;
-
-        // ƒ}[ƒJ[”‚Ìæ“¾
-        Int32 MarkerCount;
-        result = NaturalPoint.NatNetLib.NativeMethods.NatNet_Frame_GetLabeledMarkerCount(pFrame, out MarkerCount);
-
-        // ÅV‚Ìƒ}[ƒJ[ó‘Ô‚ğƒNƒŠƒA
-        m_latestMarkerStates.Clear();
-
-        // ‚·‚×‚Ä‚Ìƒ}[ƒJ[‚ÌÀ•W‚ğæ“¾
-        for (int markerIdx = 0; markerIdx < MarkerCount; ++markerIdx)
-        {
-            sMarker marker = new sMarker();
-            result = NaturalPoint.NatNetLib.NativeMethods.NatNet_Frame_GetLabeledMarker(pFrame, markerIdx, out marker);
-
-            // ƒ}[ƒJ[‚ÌÀ•W‚ğæ“¾‚µ‚Ä•Û‘¶
-            OptitrackMarkerState markerState = GetOrCreateMarkerState(marker.Id);
-            markerState.Position = new Vector3(-marker.X, marker.Y, marker.Z); // X²‚Í•„†‚ğ”½“]
-            markerState.Id = marker.Id;
-
-            // ó‘Ô‚ğƒfƒBƒNƒVƒ‡ƒiƒŠ‚É•Û‘¶
-            m_latestMarkerStates[marker.Id] = markerState;
-        }
-    }
-
-    // ƒ}[ƒJ[‚Ìó‘Ô‚ğì¬‚Ü‚½‚Íæ“¾‚·‚é
-    private OptitrackMarkerState GetOrCreateMarkerState(Int32 markerId)
-    {
-        if (!m_latestMarkerStates.ContainsKey(markerId))
-        {
-            m_latestMarkerStates[markerId] = new OptitrackMarkerState();
-        }
-        return m_latestMarkerStates[markerId];
-    }
-
-    // ƒT[ƒo[‚ÉÚ‘±
-    void OnEnable()
-    {
-        IPAddress serverAddr = IPAddress.Parse(ServerAddress);
-        IPAddress localAddr = IPAddress.Parse(LocalAddress);
-
-        m_client = new NatNetClient();
-        m_client.Connect(NatNetConnectionType.NatNetConnectionType_Unicast, localAddr, serverAddr);
-
-        m_client.NativeFrameReceived += OnNatNetFrameReceived;
-    }
-
-    // ƒT[ƒo[‚©‚çØ’f
-    void OnDisable()
-    {
-        m_client.NativeFrameReceived -= OnNatNetFrameReceived;
-        m_client.Disconnect();
-        m_client = null;
     }
 }
