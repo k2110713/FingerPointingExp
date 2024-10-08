@@ -1189,7 +1189,6 @@ public class OptitrackStreamingClient : MonoBehaviour
                 markerState.Id = marker.Id;
                 markerState.IsActive = (marker.Params & 0x20) != 0;
 
-                Debug.Log("Marker ID:  " + markerState.Id + markerState.Position);
             }
         }
         catch (Exception ex)
