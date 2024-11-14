@@ -14,7 +14,7 @@ public class SerialHandler : MonoBehaviour
     //windows‚Å‚ÍCOM1
     //Mac‚Å‚Í/dev/tty.usbmodem1421‚È‚Ç
     public string portName = "COM4";
-    public int baudRate = 115200;
+    public int baudRate = 9600;
 
     private SerialPort serialPort_;
     private Thread thread_;
@@ -32,7 +32,10 @@ public class SerialHandler : MonoBehaviour
     {
         if (isNewMessageReceived_ && isRunning_)
         {
-            OnDataReceived(message_);
+            if (OnDataReceived != null)
+            {
+                OnDataReceived(message_);
+            }
         }
         isNewMessageReceived_ = false;
     }

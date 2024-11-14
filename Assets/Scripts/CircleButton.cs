@@ -7,6 +7,7 @@ public class CircleButton : MonoBehaviour, IPointerClickHandler
 {
     private Image image;
     private bool wasInCircle = false;
+    public GameObject pointer;
 
     // 色の設定
     [SerializeField] private Color defaultColor = Color.white;      // デフォルトの色
@@ -59,12 +60,18 @@ public class CircleButton : MonoBehaviour, IPointerClickHandler
 
     private bool IsPointerInCircle()
     {
-        // マウス位置をスクリーン座標からワールド座標に変換し、ボタンのローカル空間での位置を取得
+        // ボタンとポインタのローカル位置を計算
         RectTransform rectTransform = image.rectTransform;
-        Vector2 localMousePosition = rectTransform.InverseTransformPoint(Input.mousePosition);
+        Vector2 buttonCenter = rectTransform.localPosition; // ボタンの中心位置
+        Vector2 localPointerPosition = pointer.transform.localPosition; // ポインタの位置
+
+        // ポインタからボタン中心への相対位置
+        Vector2 relativePosition = localPointerPosition - buttonCenter;
         float radius = rectTransform.rect.width * 0.42f;
 
+        Debug.Log("Pointer: " + localPointerPosition + ", RelativePosition: " + relativePosition.magnitude + ", Radius: " + radius);
+
         // 円の範囲内にいるかを判定
-        return localMousePosition.magnitude < radius;
+        return relativePosition.magnitude < radius;
     }
 }

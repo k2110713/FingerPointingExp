@@ -124,7 +124,7 @@ public class IndexFingerDetection : MonoBehaviour
         */
 
         // 矢印キーでポインタを動かす
-        float moveSpeed = 5.0f;
+        float moveSpeed = 2.0f;
         if (Input.GetKey(KeyCode.UpArrow))
         {
             poiPos2d.y += moveSpeed;

@@ -13,28 +13,45 @@ public class CopperSwitch : MonoBehaviour
     //シリアル通信ハンドラー（呪文）
     public SerialHandler serialHandler;
 
-    //ポインタオブジェクト(2次元)
-    public GameObject pointer2d;
-
-    //ボタン
-    public GameObject buttonObject;
-
     //クールダウンタイム
     private bool isCooldown = false;
     private float cooldownTime = 1.0f;
 
+    // シングルトンインスタンス
+    public static CopperSwitch Instance { get; private set; }
+
+    // トリガーフラグ
+    public bool isTriggered { get; private set; } = false;
+
+    private void Awake()
+    {
+        // インスタンスが既に存在する場合は破棄し、存在しない場合はこのインスタンスを設定
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+        }
+        else
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject); // シーンが切り替わっても破棄されないように設定
+        }
+    }
+
+    // トリガーを発生させるメソッド
+    public void ActivateTrigger()
+    {
+        isTriggered = true;
+    }
+
+    // トリガーをリセットするメソッド
+    public void ResetTrigger()
+    {
+        isTriggered = false;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
-        //ランダム配置
-        buttonObject.GetComponent<PlaceButton>().PlaceButtonRandomly();
-
-        //指さし入力方法（押す動作）
-        if (Begin.modeStatic == 2 || Begin.modeStatic == 3)
-        {
-            serialHandler.OnDataReceived += OnDataReceived;
-            Begin.stopwatch = Stopwatch.StartNew();
-        }
     }
 
     //受信した信号(message)に対する処理
@@ -47,27 +64,7 @@ public class CopperSwitch : MonoBehaviour
             UnityEngine.Debug.Log(data[0]);//Unityのコンソールに受信データを表示
             if (data[0] == "1")
             {
-                //ボタン上かどうか判定
-                if (IsButtonAtPositionRay(pointer2d.transform.position))
-                {
-                    //PushedOrNot.text = "Pushed";
-                    //UnityEngine.Debug.Log("Pushed");
-                    Begin.correctCount++;
-                }
-                Begin.cnt++;
-                //UnityEngine.Debug.Log(Begin.correctCount.ToString() + Begin.cnt.ToString());
-
-                if (Begin.cnt < Begin.testNumInOnce)
-                //if (true)
-                {
-                    buttonObject.GetComponent<PlaceButton>().PlaceButtonRandomly();
-                }
-                else
-                {
-                    Begin.stopwatch.Stop();
-                    Cooldown();
-                    buttonObject.SetActive(false);
-                }
+                isTriggered = true;
             }
         }
         catch (System.Exception e)
