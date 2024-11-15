@@ -3,43 +3,65 @@ using System.Collections.Generic;
 
 public class ButtonsManager : MonoBehaviour
 {
-    private GameObject[] buttons = new GameObject[9]; // ボタンを管理する配列
-    private List<int> taskOrder; // 現在のタスクの順序
-    private int currentTaskIndex = 0; // 現在のタスクのインデックス
-    private int currentRound = 0; // 現在のラウンド（9回のタスクが1ラウンド）
-    private const int TotalRounds = 2; // 総ラウンド数
-    private const int ButtonsCount = 9; // ボタンの総数
+    private GameObject[] buttons = new GameObject[9];
+    private List<int> taskOrder; // 現在のタスク順序
+    private int currentTaskIndex = 0; // 現在のタスクインデックス
+
+    public float radius = 300f; // 配置する円の半径
+    public int buttonCount = 9; // ボタンの数
 
     private void Start()
     {
-        // ボタンを名前で検索して配列に格納
-        for (int i = 0; i < ButtonsCount; i++)
+        // ボタンを名前で検索して配置と格納を行う
+        for (int i = 1; i <= buttonCount; i++)
         {
-            buttons[i] = GameObject.Find("Button (" + (i + 1) + ")");
-            if (buttons[i] == null)
+            string buttonName = $"Button ({i})";
+            GameObject buttonObj = GameObject.Find(buttonName);
+
+            if (buttonObj != null)
             {
-                Debug.LogError("Button (" + (i + 1) + ") が見つかりません");
+                buttons[i - 1] = buttonObj;
+                PlaceButton(buttonObj, i);
+            }
+            else
+            {
+                Debug.LogError($"ボタンが見つかりません: {buttonName}");
             }
         }
 
-        InitializeNewRound();
+        // タスク順序を生成
+        taskOrder = GenerateTaskOrder();
+
+        Debug.Log("タスク順序: " + string.Join(", ", taskOrder));
     }
 
-    private void InitializeNewRound()
+    private void PlaceButton(GameObject buttonObj, int index)
     {
-        taskOrder = GenerateTaskOrder();
-        currentTaskIndex = 0;
-        currentRound++;
+        // ボタンの新しい座標を計算
+        float angle = Mathf.Deg2Rad * (40 * (index - 1) + 90); // ラジアンに変換 (90度はπ/2)
+        float x = radius * Mathf.Cos(angle);
+        float y = radius * Mathf.Sin(angle);
 
-        Debug.Log($"ラウンド {currentRound} 開始。タスク順序: {string.Join(", ", taskOrder)}");
+        // ボタンの位置を設定
+        RectTransform rectTransform = buttonObj.GetComponent<RectTransform>();
+        if (rectTransform != null)
+        {
+            rectTransform.localPosition = new Vector3(x, y, 0);
+        }
+        else
+        {
+            Debug.LogWarning($"RectTransformが見つかりません: {buttonObj.name}");
+        }
     }
 
     private List<int> GenerateTaskOrder()
     {
-        int startButton = Random.Range(0, ButtonsCount);
+        // 開始ボタンをランダムに選択
+        int startButton = Random.Range(0, buttonCount);
         List<int> order = new List<int> { startButton };
 
-        while (order.Count < ButtonsCount)
+        // まだ選択されていない中で最も離れたボタンを順次追加
+        while (order.Count < buttonCount)
         {
             int farthestButton = GetFarthestButton(order);
             order.Add(farthestButton);
@@ -54,7 +76,7 @@ public class ButtonsManager : MonoBehaviour
         float maxDistance = float.MinValue;
         int farthestButton = -1;
 
-        for (int i = 0; i < ButtonsCount; i++)
+        for (int i = 0; i < buttonCount; i++)
         {
             if (!currentOrder.Contains(i))
             {
@@ -75,23 +97,20 @@ public class ButtonsManager : MonoBehaviour
         if (buttonIndex == taskOrder[currentTaskIndex])
         {
             Debug.Log($"正しいボタンがクリックされました: Button ({buttonIndex + 1})");
-
             currentTaskIndex++;
-            if (currentTaskIndex >= taskOrder.Count)
-            {
-                if (currentRound < TotalRounds)
-                {
-                    InitializeNewRound();
-                }
-                else
-                {
-                    Debug.Log("すべてのタスクが完了しました！");
-                }
-            }
         }
         else
         {
             Debug.LogWarning($"間違ったボタンがクリックされました: Button ({buttonIndex + 1})");
         }
+    }
+
+    public int GetNextTargetButton()
+    {
+        if (currentTaskIndex < taskOrder.Count)
+        {
+            return taskOrder[currentTaskIndex];
+        }
+        return -1; // タスクが終了した場合
     }
 }
