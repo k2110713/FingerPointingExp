@@ -8,11 +8,6 @@ public class SerialHandler : MonoBehaviour
     public delegate void SerialDataReceivedEventHandler(string message);
     public event SerialDataReceivedEventHandler OnDataReceived;
 
-    //É|Å[Égñº
-    //ó·
-    //LinuxÇ≈ÇÕ/dev/ttyUSB0
-    //windowsÇ≈ÇÕCOM1
-    //MacÇ≈ÇÕ/dev/tty.usbmodem1421Ç»Ç«
     public string portName = "COM4";
     public int baudRate = 9600;
 
@@ -25,6 +20,7 @@ public class SerialHandler : MonoBehaviour
 
     void Awake()
     {
+        //Debug.Log("Initializing SerialHandler...");
         Open();
     }
 
@@ -34,6 +30,7 @@ public class SerialHandler : MonoBehaviour
         {
             if (OnDataReceived != null)
             {
+                //Debug.Log("Data received: " + message_);
                 OnDataReceived(message_);
             }
         }
@@ -42,22 +39,29 @@ public class SerialHandler : MonoBehaviour
 
     void OnDestroy()
     {
+        //Debug.Log("Destroying SerialHandler...");
         Close();
     }
 
     private void Open()
     {
-        serialPort_ = new SerialPort(portName, baudRate, Parity.None, 8, StopBits.One);
-        //Ç‹ÇΩÇÕ
-        //serialPort_ = new SerialPort(portName, baudRate);
+        try
+        {
+            serialPort_ = new SerialPort(portName, baudRate, Parity.None, 8, StopBits.One);
+            serialPort_.Open();
+            serialPort_.DtrEnable = true;
+            serialPort_.RtsEnable = true;
+            isRunning_ = true;
 
-        serialPort_.Open();
-        serialPort_.DtrEnable = true;
-        serialPort_.RtsEnable = true;
-        isRunning_ = true;
+            //Debug.Log("Serial port opened: " + portName + " at " + baudRate + " baud");
 
-        thread_ = new Thread(Read);
-        thread_.Start();
+            thread_ = new Thread(Read);
+            thread_.Start();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("Failed to open serial port: " + e.Message);
+        }
     }
 
     public void Close()
@@ -67,14 +71,18 @@ public class SerialHandler : MonoBehaviour
 
         if (thread_ != null && thread_.IsAlive)
         {
+            //Debug.Log("Stopping the read thread...");
             thread_.Abort();
             thread_.Join();
+            //Debug.Log("Read thread stopped.");
         }
 
         if (serialPort_ != null && serialPort_.IsOpen)
         {
+            //Debug.Log("Closing serial port...");
             serialPort_.Close();
             serialPort_.Dispose();
+            //Debug.Log("Serial port closed.");
         }
     }
 
@@ -86,10 +94,11 @@ public class SerialHandler : MonoBehaviour
             {
                 message_ = serialPort_.ReadLine();
                 isNewMessageReceived_ = true;
+                //Debug.Log("Read message: " + message_);
             }
             catch (System.Exception e)
             {
-                Debug.LogWarning(e.Message);
+                Debug.LogWarning("Error reading from serial port: " + e.Message);
             }
         }
     }
@@ -98,11 +107,19 @@ public class SerialHandler : MonoBehaviour
     {
         try
         {
-            serialPort_.Write(message);
+            if (serialPort_ != null && serialPort_.IsOpen)
+            {
+                serialPort_.Write(message);
+                //Debug.Log("Written message: " + message);
+            }
+            else
+            {
+                Debug.LogWarning("Serial port not open. Cannot write message.");
+            }
         }
         catch (System.Exception e)
         {
-            Debug.LogWarning(e.Message);
+            Debug.LogWarning("Error writing to serial port: " + e.Message);
         }
     }
 }

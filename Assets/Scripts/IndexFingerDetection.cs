@@ -1,37 +1,34 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
 using TMPro;
 using System.Collections;
-using System.Diagnostics;
-using UnityEngine.SceneManagement;
 
 public class IndexFingerDetection : MonoBehaviour
 {
-    private const int BufferSize = 8;
-
-    private Queue<Vector3> pos1History = new Queue<Vector3>();
-    private Queue<Vector3> pos2History = new Queue<Vector3>();
-
-    private Vector3 smoothedPos1 = Vector3.zero;
-    private Vector3 smoothedPos2 = Vector3.zero;
-
-    public Camera mainCamera;
-    public OptitrackStreamingClient optitrackClient;
     public TextMeshProUGUI accelerationText;
-
-    public GameObject pointer2d;
     public GameObject midAirButton;
-    public GameObject buttonObject;
-
+    public GameObject midAirDisplay;
     public RectTransform canvasRectTransform;
-    public RectTransform buttonRectTransform;
+    public OptitrackStreamingClient optitrackClient;
 
     public float pixelX = 1920;
     public float pixelY = 1080;
 
-    public GameObject display;
+    private const int BufferSize = 8;
+    private Queue<Vector3> pos1History = new Queue<Vector3>();
+    private Queue<Vector3> pos2History = new Queue<Vector3>();
+    private Vector3 smoothedPos1 = Vector3.zero;
+    private Vector3 smoothedPos2 = Vector3.zero;
+
+    private float sx;
+    private float sy;
+    private Vector3 poiPos2d = Vector3.zero;
+
+    public float difX = 0, difY = 0;
+
+    private float previousZpos = 0.0f;
+    private bool isCooldown = false;
+    private float cooldownTime = 1.0f;
 
     float t = 0.0f;
 
@@ -41,32 +38,17 @@ public class IndexFingerDetection : MonoBehaviour
 
     float a, b, c, d;
 
-    Vector3 poiPos3d = new Vector3(0f, 0f, 0f);
-    Vector3 poiPos2d = new Vector3(0f, 0f, 0f);
-
-    public float difX = 0, difY = 0;
-
-    float sx;
-    float sy;
-
-    private float previousTime = 0.0f;
-    public float updateInterval = 0.1f;
-    private float[] thresholdAcceleration = { 100, 100, 200 };
-    private float previousDistance1 = 0.0f;
-    private float previousDistance2 = 0.0f;
-
-    private float previousZpos = 0.0f;
-    private bool isCooldown = false;
-    private float cooldownTime = 1.0f;
-
     public int marker1ID = 1;
     public int marker2ID = 2;
 
     void Start()
     {
-        sx = pixelX / display.transform.localScale.x;
-        sy = pixelY / display.transform.localScale.y;
-        p1.z = -display.transform.position.z; p2.z = -display.transform.position.z; p3.z = -display.transform.position.z;
+        // 画面サイズとポインターのスケーリングを設定
+        sx = pixelX / midAirDisplay.transform.localScale.x;
+        sy = pixelY / midAirDisplay.transform.localScale.y;
+
+        // OptiTrackの平面計算用
+        p1.z = -midAirDisplay.transform.position.z; p2.z = -midAirDisplay.transform.position.z; p3.z = -midAirDisplay.transform.position.z;
 
         Vector3 AB = p2 - p1;
         Vector3 AC = p3 - p1;
@@ -76,14 +58,11 @@ public class IndexFingerDetection : MonoBehaviour
         b = normal.y;
         c = normal.z;
         d = -(a * p1.x + b * p1.y + c * p1.z);
-
-        previousTime = Time.time;
     }
 
     void Update()
     {
-        // OptiTrackのデータをコメントアウトして、矢印キーでの制御を追加
-
+        // OptiTrackのデータ取得処理 (将来の利用のためにコメントアウト)
         /*
         if (optitrackClient == null)
         {
@@ -113,7 +92,7 @@ public class IndexFingerDetection : MonoBehaviour
                 difY = poiPos2d.y;
             }
 
-            pointer2d.transform.localPosition = new Vector3(poiPos2d.x - difX, poiPos2d.y - difY, poiPos2d.z);
+            transform.localPosition = new Vector3(poiPos2d.x - difX, poiPos2d.y - difY, poiPos2d.z);
 
             pushButton(smoothedPos2);
         }
@@ -142,12 +121,18 @@ public class IndexFingerDetection : MonoBehaviour
             poiPos2d.x += moveSpeed;
         }
 
-        pointer2d.transform.localPosition = new Vector3(poiPos2d.x - difX, poiPos2d.y - difY, poiPos2d.z);
+        // ポインタの位置を更新
+        transform.localPosition = new Vector3(poiPos2d.x - difX, poiPos2d.y - difY, poiPos2d.z);
+
+        // ボタンを押す処理
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+        }
     }
 
-    void pushButton(Vector3 pos)
+    /*void pushButton(Vector3 pos)
     {
-        if (previousZpos <= display.transform.position.z && pos.z > display.transform.position.z)
+        if (previousZpos <= midAirDisplay.transform.position.z && pos.z > midAirDisplay.transform.position.z)
         {
             if (IsButtonAtPosition(pos))
             {
@@ -161,7 +146,7 @@ public class IndexFingerDetection : MonoBehaviour
             else
             {
                 Begin.stopwatch.Stop();
-                Cooldown();
+                StartCoroutine(Cooldown());
                 buttonObject.SetActive(false);
             }
         }
@@ -171,6 +156,7 @@ public class IndexFingerDetection : MonoBehaviour
 
     bool IsButtonAtPosition(Vector3 position)
     {
+        // ボタン位置の検知処理
         RectTransform buttonRectTransform = midAirButton.GetComponent<RectTransform>();
 
         Vector3 buttonPosition = midAirButton.transform.localPosition;
@@ -183,7 +169,7 @@ public class IndexFingerDetection : MonoBehaviour
 
         return (position.x >= buttonMinX && position.x <= buttonMaxX &&
                 position.y >= buttonMinY && position.y <= buttonMaxY);
-    }
+    }*/
 
     void AddToHistory(Vector3 pos, Queue<Vector3> history)
     {
@@ -209,12 +195,14 @@ public class IndexFingerDetection : MonoBehaviour
         t = (d - (a * pos1.x + b * pos1.y + c * pos1.z))
             / (a * (pos2.x - pos1.x) + b * (pos2.y - pos1.y) + c * (pos2.z - pos1.z));
 
-        poiPos3d.x = pos1.x + t * (pos2.x - pos1.x);
-        poiPos3d.y = pos1.y + t * (pos2.y - pos1.y);
-        poiPos3d.z = pos1.z + t * (pos2.z - pos1.z);
+        Vector3 poiPos3d = new Vector3(
+            pos1.x + t * (pos2.x - pos1.x),
+            pos1.y + t * (pos2.y - pos1.y),
+            pos1.z + t * (pos2.z - pos1.z)
+        );
 
         poiPos2d.x = poiPos3d.x * sx;
-        poiPos2d.y = (poiPos3d.y - display.transform.position.y) * sy;
+        poiPos2d.y = (poiPos3d.y - midAirDisplay.transform.position.y) * sy;
         poiPos2d.z = 0;
     }
 

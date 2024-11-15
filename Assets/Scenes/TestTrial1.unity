@@ -1175,6 +1175,7 @@ GameObject:
   - component: {fileID: 605280638}
   - component: {fileID: 605280637}
   - component: {fileID: 605280639}
+  - component: {fileID: 605280640}
   m_Layer: 5
   m_Name: 2DPointer
   m_TagString: Untagged
@@ -1251,6 +1252,29 @@ MonoBehaviour:
   defaultColor: {r: 1, g: 1, b: 1, a: 1}
   enterColor: {r: 0, g: 1, b: 0, a: 1}
   clickColor: {r: 1, g: 0, b: 0, a: 1}
+--- !u!114 &605280640
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 605280633}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1ecd6a5a893759e4880481d8fe9e82b8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  accelerationText: {fileID: 1264822113}
+  midAirButton: {fileID: 1978649723}
+  midAirDisplay: {fileID: 189365429}
+  canvasRectTransform: {fileID: 1153843147}
+  optitrackClient: {fileID: 939361582}
+  pixelX: 1920
+  pixelY: 1080
+  difX: 0
+  difY: 0
+  marker1ID: 1
+  marker2ID: 2
 --- !u!1 &897582779
 GameObject:
   m_ObjectHideFlags: 0
@@ -1835,7 +1859,7 @@ GameObject:
   - component: {fileID: 1264822114}
   - component: {fileID: 1264822113}
   m_Layer: 5
-  m_Name: acceleration
+  m_Name: AccelerationText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2792,7 +2816,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1607525361
 Transform:
   m_ObjectHideFlags: 0
@@ -2820,20 +2844,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1ecd6a5a893759e4880481d8fe9e82b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mainCamera: {fileID: 0}
-  optitrackClient: {fileID: 939361582}
   accelerationText: {fileID: 0}
-  pointer2d: {fileID: 605280633}
   midAirButton: {fileID: 1978649723}
-  buttonObject: {fileID: 532463079}
+  midAirDisplay: {fileID: 0}
   canvasRectTransform: {fileID: 1153843147}
-  buttonRectTransform: {fileID: 532463080}
+  optitrackClient: {fileID: 0}
   pixelX: 1920
   pixelY: 1080
-  display: {fileID: 189365429}
   difX: 0
   difY: 0
-  updateInterval: 0.1
   marker1ID: 1
   marker2ID: 2
 --- !u!1 &1779347695

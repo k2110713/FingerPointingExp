@@ -12,6 +12,7 @@ public class CircleButtonHandler : MonoBehaviour
     [SerializeField] private Color enterColor = Color.green;     // マウスが乗ったときの色
     [SerializeField] private Color clickColor = Color.red;       // クリック時の色
 
+    bool isInCircle = false;
     private bool[] wasInCircle; // 各ボタンの状態を管理するフラグ
 
     private void Start()
@@ -39,47 +40,41 @@ public class CircleButtonHandler : MonoBehaviour
 
     private void Update()
     {
-        // 各ボタンの円形範囲にポインタが入っているかチェック
-        for (int i = 0; i < buttonImages.Length; i++)
+        if (CopperSwitch.Instance.isTriggered)//タップ検知
         {
-            if (buttonImages[i] != null)
+            // 各ボタンの円形範囲にポインタが入っているかチェック
+            for (int i = 0; i < buttonImages.Length; i++)
             {
-                bool isInCircle = IsPointerInCircle(buttonImages[i]);
-
-                if (!wasInCircle[i] && isInCircle)
+                if (buttonImages[i] != null)
                 {
-                    // enter状態
-                    Debug.Log("Enter Button (" + (i + 1) + ")");
-                    buttonImages[i].color = enterColor;
-                }
-                else if (wasInCircle[i] && !isInCircle)
-                {
-                    // exit状態
-                    Debug.Log("Exit Button (" + (i + 1) + ")");
-                    buttonImages[i].color = defaultColor;
-                }
+                    isInCircle = IsPointerInCircle(buttonImages[i]);
 
-                // クリックチェック
-                if (isInCircle && Input.GetKeyDown(KeyCode.Return)) // 左クリック
-                {
-                    Debug.Log("Click Button (" + (i + 1) + ")");
-                    buttonImages[i].color = clickColor;
-                    buttons[i].onClick.Invoke();
+                    /*if (!wasInCircle[i] && isInCircle)
+                    {
+                        // enter状態
+                        Debug.Log("Enter Button (" + (i + 1) + ")");
+                        buttonImages[i].color = enterColor;
+                    }
+                    else if (wasInCircle[i] && !isInCircle)
+                    {
+                        // exit状態
+                        Debug.Log("Exit Button (" + (i + 1) + ")");
+                        buttonImages[i].color = defaultColor;
+                    }*/
+
+                    if (isInCircle)//ポインタがボタン上かどうか
+                    {
+                        //Debug.Log("トリガーが発生しました！");
+                        Debug.Log("Click Button (" + (i + 1) + ")");
+                        buttonImages[i].color = clickColor;
+                        buttons[i].onClick.Invoke();
+                    }
+                    // 状態を更新
+                    //wasInCircle[i] = isInCircle;
                 }
-
-                // トリガーが発生しているかチェック
-                if (isInCircle && CopperSwitch.Instance.isTriggered)
-                {
-                    // トリガー発生時の処理
-                    Debug.Log("トリガーが発生しました！");
-
-                    // 処理が終わったらトリガーをリセット
-                    CopperSwitch.Instance.ResetTrigger();
-                }
-
-                // 状態を更新
-                wasInCircle[i] = isInCircle;
             }
+            // 処理が終わったらトリガーをリセット
+            CopperSwitch.Instance.ResetTrigger();
         }
     }
 

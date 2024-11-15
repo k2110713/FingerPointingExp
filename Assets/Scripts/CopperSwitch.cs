@@ -52,19 +52,29 @@ public class CopperSwitch : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        if (serialHandler != null)
+        {
+            serialHandler.OnDataReceived += OnDataReceived;
+        }
+        else
+        {
+            UnityEngine.Debug.LogWarning("SerialHandler is not assigned.");
+        }
     }
 
     //受信した信号(message)に対する処理
     void OnDataReceived(string message)
     {
+        //UnityEngine.Debug.Log("received");
         var data = message.Split(
                 new string[] { "\n" }, System.StringSplitOptions.None);
         try
         {
-            UnityEngine.Debug.Log(data[0]);//Unityのコンソールに受信データを表示
+            //UnityEngine.Debug.Log(data[0]);//Unityのコンソールに受信データを表示
             if (data[0] == "1")
             {
                 isTriggered = true;
+                UnityEngine.Debug.Log("tap!");
             }
         }
         catch (System.Exception e)
