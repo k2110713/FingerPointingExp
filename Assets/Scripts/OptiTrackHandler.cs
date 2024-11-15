@@ -3,7 +3,7 @@ using UnityEngine;
 using TMPro;
 using System.Collections;
 
-public class IndexFingerDetection : MonoBehaviour
+public class OptiTrackHandler : MonoBehaviour
 {
     public TextMeshProUGUI accelerationText;
     public GameObject midAirButton;

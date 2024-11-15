@@ -1,11 +1,12 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
 
-public class CircleButtonHandler : MonoBehaviour
+public class PointingHandler : MonoBehaviour
 {
     private Image[] buttonImages;
     private Button[] buttons;
+
+    [SerializeField] private ButtonsManager buttonsManager; // ButtonsManagerを参照
 
     // 色の設定
     [SerializeField] private Color defaultColor = Color.white;   // デフォルトの色
@@ -67,7 +68,8 @@ public class CircleButtonHandler : MonoBehaviour
                         //Debug.Log("トリガーが発生しました！");
                         Debug.Log("Click Button (" + (i + 1) + ")");
                         buttonImages[i].color = clickColor;
-                        buttons[i].onClick.Invoke();
+                        // ButtonsManagerにクリックされたボタン番号を通知
+                        buttonsManager.OnButtonClick(i);
                     }
                     // 状態を更新
                     //wasInCircle[i] = isInCircle;
