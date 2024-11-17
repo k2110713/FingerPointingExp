@@ -74,7 +74,7 @@ public class CopperSwitch : MonoBehaviour
             if (data[0] == "1")
             {
                 isTriggered = true;
-                UnityEngine.Debug.Log("tap!");
+                //UnityEngine.Debug.Log("tap!");
             }
         }
         catch (System.Exception e)

@@ -3,24 +3,28 @@ using System.Collections.Generic;
 
 public class ButtonsManager : MonoBehaviour
 {
-    private GameObject[] buttons = new GameObject[9];
-    private List<int> taskOrder; // 現在のタスク順序
-    private int currentTaskIndex = 0; // 現在のタスクインデックス
-
-    public float radius = 300f; // 配置する円の半径
+    public int setCount = 2; // セット数
     public int buttonCount = 9; // ボタンの数
+    public float radius = 300f; // 配置する円の半径
+    public GameObject panel;
+    private List<List<int>> allTaskOrders = new List<List<int>>(); // すべてのタスク順序を保持するリスト
+    private int currentTargetIndex = 0;
+    private int currentTaskIndex = 0;
+    private System.Random random = new System.Random(); // 乱数生成器
 
-    private void Start()
+    void Start()
     {
-        // ボタンを名前で検索して配置と格納を行う
+        GenerateAllTaskOrders();
+        ShuffleTaskOrders(); // シャッフル
+        ResetToFirstTask();
+
+        // すべてのボタンを配置
         for (int i = 1; i <= buttonCount; i++)
         {
             string buttonName = $"Button ({i})";
             GameObject buttonObj = GameObject.Find(buttonName);
-
             if (buttonObj != null)
             {
-                buttons[i - 1] = buttonObj;
                 PlaceButton(buttonObj, i);
             }
             else
@@ -28,17 +32,12 @@ public class ButtonsManager : MonoBehaviour
                 Debug.LogError($"ボタンが見つかりません: {buttonName}");
             }
         }
-
-        // タスク順序を生成
-        taskOrder = GenerateTaskOrder();
-
-        Debug.Log("タスク順序: " + string.Join(", ", taskOrder));
     }
 
-    private void PlaceButton(GameObject buttonObj, int index)
+    void PlaceButton(GameObject buttonObj, int index)
     {
         // ボタンの新しい座標を計算
-        float angle = Mathf.Deg2Rad * (40 * (index - 1) + 90); // ラジアンに変換 (90度はπ/2)
+        float angle = Mathf.Deg2Rad * (-40 * (index - 1) + 90); // 40度ずつ角度を変えて円形に配置
         float x = radius * Mathf.Cos(angle);
         float y = radius * Mathf.Sin(angle);
 
@@ -54,63 +53,89 @@ public class ButtonsManager : MonoBehaviour
         }
     }
 
-    private List<int> GenerateTaskOrder()
+    // すべてのタスク順序を生成
+    void GenerateAllTaskOrders()
     {
-        // 開始ボタンをランダムに選択
-        int startButton = Random.Range(0, buttonCount);
-        List<int> order = new List<int> { startButton };
-
-        // まだ選択されていない中で最も離れたボタンを順次追加
-        while (order.Count < buttonCount)
+        for (int set = 0; set < setCount; set++)
         {
-            int farthestButton = GetFarthestButton(order);
-            order.Add(farthestButton);
-        }
-
-        return order;
-    }
-
-    private int GetFarthestButton(List<int> currentOrder)
-    {
-        int lastButton = currentOrder[currentOrder.Count - 1];
-        float maxDistance = float.MinValue;
-        int farthestButton = -1;
-
-        for (int i = 0; i < buttonCount; i++)
-        {
-            if (!currentOrder.Contains(i))
+            for (int startButton = 1; startButton <= buttonCount; startButton++)
             {
-                float distance = Vector2.Distance(buttons[lastButton].transform.localPosition, buttons[i].transform.localPosition);
-                if (distance > maxDistance)
+                for (int step = 4; step <= 5; step++) // ステップ値を4と5で試行
                 {
-                    maxDistance = distance;
-                    farthestButton = i;
+                    allTaskOrders.Add(GenerateTaskOrder(startButton, step));
                 }
             }
         }
-
-        return farthestButton;
     }
 
-    public void OnButtonClick(int buttonIndex)
+    // タスクオーダーをランダムにシャッフル
+    void ShuffleTaskOrders()
     {
-        if (buttonIndex == taskOrder[currentTaskIndex])
+        int count = allTaskOrders.Count;
+        while (count > 1)
         {
-            Debug.Log($"正しいボタンがクリックされました: Button ({buttonIndex + 1})");
-            currentTaskIndex++;
-        }
-        else
-        {
-            Debug.LogWarning($"間違ったボタンがクリックされました: Button ({buttonIndex + 1})");
+            count--;
+            int k = random.Next(count + 1);
+            List<int> value = allTaskOrders[k];
+            allTaskOrders[k] = allTaskOrders[count];
+            allTaskOrders[count] = value;
         }
     }
 
+    // 1つのタスク順序を生成
+    List<int> GenerateTaskOrder(int startButton, int step)
+    {
+        List<int> order = new List<int> { startButton };
+        int nextButton = startButton;
+        for (int i = 1; i < buttonCount; i++)
+        {
+            nextButton = (nextButton + step - 1) % 9 + 1;
+            order.Add(nextButton);
+        }
+        return order;
+    }
+
+    // タスクをリセットして最初から開始
+    public void ResetToFirstTask()
+    {
+        currentTargetIndex = 0;
+        currentTaskIndex = 0;
+        SetTaskOrder(currentTaskIndex);
+    }
+
+    // 現在のタスクオーダーを設定
+    void SetTaskOrder(int taskIndex)
+    {
+        var currentOrder = allTaskOrders[taskIndex];
+        Debug.Log("Current Task Order: " + string.Join(", ", currentOrder));
+    }
+
+    // 次のターゲットボタンのインデックスを取得
     public int GetNextTargetButton()
     {
-        if (currentTaskIndex < taskOrder.Count)
+        if (currentTargetIndex < buttonCount && currentTaskIndex < allTaskOrders.Count)
         {
-            return taskOrder[currentTaskIndex];
+            return allTaskOrders[currentTaskIndex][currentTargetIndex] - 1; // 0-indexedに調整
         }
         return -1; // タスクが終了した場合
+    }
+
+    // 次のタスクを設定
+    public bool SetNextTask()
+    {
+        if (currentTargetIndex < buttonCount - 1)
+        {
+            currentTargetIndex++;
+            return true;
+        }
+        else if (currentTaskIndex < allTaskOrders.Count - 1)
+        {
+            currentTaskIndex++;
+            currentTargetIndex = 0;
+            panel.SetActive(true);
+            SetTaskOrder(currentTaskIndex);
+            return true;
+        }
+        return false; // すべてのタスクが終了
     }
 }

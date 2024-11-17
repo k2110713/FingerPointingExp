@@ -3,95 +3,126 @@ using UnityEngine.UI;
 
 public class PointingHandler : MonoBehaviour
 {
-    private Image[] buttonImages;
-    private Button[] buttons;
+    // ボタンのビジュアル表現を保持するための配列
+    [SerializeField] private Image[] buttonImages;
+    // ボタンコンポーネントを保持するための配列
+    [SerializeField] private Button[] buttons;
+    // ボタンの管理とタスク進行を担うButtonsManagerの参照
+    [SerializeField] private ButtonsManager buttonsManager;
 
-    [SerializeField] private ButtonsManager buttonsManager; // ButtonsManagerを参照
+    // ボタンのデフォルト色
+    [SerializeField] private Color defaultColor = Color.white;
+    // 現在のターゲットボタンを示す色
+    [SerializeField] private Color targetColor = Color.red;
+    // ボタンがクリックされた際の色
+    [SerializeField] private Color clickColor = Color.green;
 
-    // 色の設定
-    [SerializeField] private Color defaultColor = Color.white;   // デフォルトの色
-    [SerializeField] private Color enterColor = Color.green;     // マウスが乗ったときの色
-    [SerializeField] private Color clickColor = Color.red;       // クリック時の色
+    public GameObject panel;
 
-    bool isInCircle = false;
-    private bool[] wasInCircle; // 各ボタンの状態を管理するフラグ
+    // 現在のターゲットボタンのインデックス
+    private int currentTargetIndex = -1;
 
-    private void Start()
+    void Start()
     {
-        // 8個のボタンを配列に格納
-        buttonImages = new Image[8];
-        buttons = new Button[8];
-        wasInCircle = new bool[8];
+        // ボタンの初期化と最初のターゲット設定
+        InitializeButtons();
+        UpdateTargetButton(-1);
+    }
 
-        for (int i = 0; i < 8; i++)
+    void Update()
+    {
+        //if ((CopperSwitch.Instance.isTriggered || Input.GetKeyDown(KeyCode.Return)) && panel.activeSelf) //タップ検出（デバッグも）
+        if (Input.GetKeyDown(KeyCode.Return) && panel.activeSelf)
         {
-            GameObject buttonObj = GameObject.Find("Button (" + (i + 1) + ")");
-            if (buttonObj != null)
+            CheckAndProcessButtonClick();
+        }
+
+        //隠し用のパネルを解除
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            panel.SetActive(false);
+        }
+    }
+
+    // 全ボタンの初期化と配列への登録
+    private void InitializeButtons()
+    {
+        buttonImages = new Image[9];
+        buttons = new Button[9];
+
+        for (int i = 0; i < 9; i++)
+        {
+            string buttonName = "Button (" + (i + 1) + ")";
+            GameObject buttonObj = GameObject.Find(buttonName);
+            if (buttonObj)
             {
                 buttonImages[i] = buttonObj.GetComponent<Image>();
                 buttons[i] = buttonObj.GetComponent<Button>();
-                buttonImages[i].color = defaultColor; // 初期色をデフォルト色に設定
+                buttonImages[i].color = defaultColor;
             }
             else
             {
-                Debug.LogWarning("Button (" + (i + 1) + ") not found.");
+                Debug.LogError(buttonName + " not found.");
             }
         }
     }
 
-    private void Update()
+    // ボタンクリックのチェックと処理
+    private void CheckAndProcessButtonClick()
     {
-        if (CopperSwitch.Instance.isTriggered)//タップ検知
+        for (int i = 0; i < buttonImages.Length; i++)
         {
-            // 各ボタンの円形範囲にポインタが入っているかチェック
-            for (int i = 0; i < buttonImages.Length; i++)
+            if (buttonImages[i] != null && IsPointerInCircle(buttonImages[i]))
             {
-                if (buttonImages[i] != null)
+                if (i == currentTargetIndex)
                 {
-                    isInCircle = IsPointerInCircle(buttonImages[i]);
-
-                    /*if (!wasInCircle[i] && isInCircle)
+                    Debug.Log("Correct button clicked: Button (" + (i + 1) + ")");
+                    int previousTargetIndex = buttonsManager.GetNextTargetButton();
+                    if (!buttonsManager.SetNextTask()) // ターゲット・タスクを更新し、全ターゲット・タスクが終了しているなら終了
                     {
-                        // enter状態
-                        Debug.Log("Enter Button (" + (i + 1) + ")");
-                        buttonImages[i].color = enterColor;
+                        Debug.Log("All tasks completed. Restarting...");
                     }
-                    else if (wasInCircle[i] && !isInCircle)
+                    else
                     {
-                        // exit状態
-                        Debug.Log("Exit Button (" + (i + 1) + ")");
-                        buttonImages[i].color = defaultColor;
-                    }*/
-
-                    if (isInCircle)//ポインタがボタン上かどうか
-                    {
-                        //Debug.Log("トリガーが発生しました！");
-                        Debug.Log("Click Button (" + (i + 1) + ")");
-                        buttonImages[i].color = clickColor;
-                        // ButtonsManagerにクリックされたボタン番号を通知
-                        buttonsManager.OnButtonClick(i);
+                        UpdateTargetButton(previousTargetIndex); //ターゲットを更新
                     }
-                    // 状態を更新
-                    //wasInCircle[i] = isInCircle;
+                }
+                else
+                {
+                    Debug.LogWarning("Incorrect button clicked: Button (" + (i + 1) + ")");
                 }
             }
-            // 処理が終わったらトリガーをリセット
-            CopperSwitch.Instance.ResetTrigger();
         }
     }
 
+    // 現在のターゲットボタンの更新
+    private bool UpdateTargetButton(int prev)
+    {
+        currentTargetIndex = buttonsManager.GetNextTargetButton();
+        if (currentTargetIndex != -1)
+        {
+            Debug.Log("Current target is Button (" + (currentTargetIndex + 1) + ")");
+            buttonImages[currentTargetIndex].color = targetColor;
+            if (prev != -1)
+            {
+                buttonImages[prev].color = defaultColor;
+            }
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    // ボタンとポインタ位置が円形範囲内にあるかを判定
     private bool IsPointerInCircle(Image buttonImage)
     {
-        // ボタンとポインタのローカル位置を計算
         RectTransform rectTransform = buttonImage.rectTransform;
-        Vector2 buttonCenter = rectTransform.localPosition; // ボタンの中心位置
-        Vector2 localPointerPosition = transform.localPosition; // ポインタ（自身）の位置
-
-        // ポインタからボタン中心への相対位置
+        Vector2 buttonCenter = rectTransform.localPosition;
+        Vector2 localPointerPosition = transform.localPosition;
         Vector2 relativePosition = localPointerPosition - buttonCenter;
-        float radius = rectTransform.rect.width * 0.42f;
 
-        // 円の範囲内にいるかを判定
-        return relativePosition.magnitude < radius;
+        return relativePosition.magnitude < (rectTransform.rect.width * 0.42f);
     }
 }
