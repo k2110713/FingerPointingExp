@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 public class ButtonsManager : MonoBehaviour
 {
-    public int setCount = 2; // セット数
+    public int setCount = 1; // セット数
     public int buttonCount = 9; // ボタンの数
     public float radius = 300f; // 配置する円の半径
     public GameObject panel;
@@ -12,7 +12,9 @@ public class ButtonsManager : MonoBehaviour
     private int currentTaskIndex = 0;
     private System.Random random = new System.Random(); // 乱数生成器
 
-    void Start()
+    public WriteToCSV csvWriter;  // Inspectorからアサイン
+
+    private void Awake()
     {
         GenerateAllTaskOrders();
         ShuffleTaskOrders(); // シャッフル
@@ -32,6 +34,13 @@ public class ButtonsManager : MonoBehaviour
                 Debug.LogError($"ボタンが見つかりません: {buttonName}");
             }
         }
+    }
+
+    void Start()
+    {
+        //csv書き込みの初期化
+        csvWriter.SetupFile(radius);
+        csvWriter.LogExperimentInfo(allTaskOrders);
     }
 
     void PlaceButton(GameObject buttonObj, int index)
@@ -107,7 +116,7 @@ public class ButtonsManager : MonoBehaviour
     void SetTaskOrder(int taskIndex)
     {
         var currentOrder = allTaskOrders[taskIndex];
-        Debug.Log("Current Task Order: " + string.Join(", ", currentOrder));
+        Debug.Log("Task (" + (taskIndex + 1) + ") Order: " + string.Join(", ", currentOrder));
     }
 
     // 次のターゲットボタンのインデックスを取得
@@ -125,17 +134,20 @@ public class ButtonsManager : MonoBehaviour
     {
         if (currentTargetIndex < buttonCount - 1)
         {
+            csvWriter.LogData(currentTaskIndex, allTaskOrders[currentTaskIndex][currentTargetIndex]);
             currentTargetIndex++;
             return true;
         }
         else if (currentTaskIndex < allTaskOrders.Count - 1)
         {
+            csvWriter.LogData(currentTaskIndex, allTaskOrders[currentTaskIndex][currentTargetIndex]);
             currentTaskIndex++;
             currentTargetIndex = 0;
             panel.SetActive(true);
             SetTaskOrder(currentTaskIndex);
             return true;
         }
+        csvWriter.LogData(currentTaskIndex, allTaskOrders[currentTaskIndex][currentTargetIndex]);
         return false; // すべてのタスクが終了
     }
 }

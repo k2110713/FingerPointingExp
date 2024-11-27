@@ -22,6 +22,7 @@ using System.Threading;
 using UnityEngine;
 using NaturalPoint;
 using NaturalPoint.NatNetLib;
+using static Unity.VisualScripting.Dependencies.Sqlite.SQLite3;
 
 
 /// <summary>Skeleton naming conventions supported by OptiTrack Motive.</summary>
@@ -850,6 +851,30 @@ public class OptitrackStreamingClient : MonoBehaviour
         m_skeletons[name] = component;
 
         SubscribeSkeleton(component, name);
+    }
+
+    private bool TryReconnect(int retryCount, int retryIntervalMilliseconds, NatNetConnectionType connType, IPAddress localAddr, IPAddress serverAddr)
+    {
+        for (int i = 0; i < retryCount; i++)
+        {
+            Debug.Log($"再接続試行 {i + 1}/{retryCount}...");
+            try
+            {
+                // 接続を再試行
+                m_client.Connect(connType, localAddr, serverAddr);
+
+                Debug.Log("再接続成功！");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"再接続失敗: {ex.Message}");
+                Thread.Sleep(retryIntervalMilliseconds); // 指定間隔待機
+            }
+        }
+
+        Debug.LogError("再接続試行回数が上限に達しました。");
+        return false;
     }
 
 

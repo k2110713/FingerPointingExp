@@ -1,24 +1,22 @@
 using System.Collections.Generic;
-using UnityEngine;
 using TMPro;
-using System.Collections;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class OptiTrackHandler : MonoBehaviour
 {
-    public TextMeshProUGUI accelerationText;
-    public GameObject midAirButton;
     public GameObject midAirDisplay;
-    public RectTransform canvasRectTransform;
     public OptitrackStreamingClient optitrackClient;
 
     public float pixelX = 1920;
     public float pixelY = 1080;
 
+    OptitrackMarkerState marker1State;
+    OptitrackMarkerState marker2State;
+
     private const int BufferSize = 8;
-    private Queue<Vector3> pos1History = new Queue<Vector3>();
-    private Queue<Vector3> pos2History = new Queue<Vector3>();
-    private Vector3 smoothedPos1 = Vector3.zero;
-    private Vector3 smoothedPos2 = Vector3.zero;
+    private Queue<Vector3> pointerPosHistory = new Queue<Vector3>();
+    private Vector3 filteredPointerPos = Vector3.zero;
 
     private float sx;
     private float sy;
@@ -27,8 +25,6 @@ public class OptiTrackHandler : MonoBehaviour
     public float difX = 0, difY = 0;
 
     private float previousZpos = 0.0f;
-    private bool isCooldown = false;
-    private float cooldownTime = 1.0f;
 
     float t = 0.0f;
 
@@ -41,8 +37,79 @@ public class OptiTrackHandler : MonoBehaviour
     public int marker1ID = 1;
     public int marker2ID = 2;
 
+    // ボタンのビジュアル表現を保持するための配列
+    [SerializeField] private Image[] buttonImages;
+    // ボタンコンポーネントを保持するための配列
+    [SerializeField] private Button[] buttons;
+    // ボタンの管理とタスク進行を担うButtonsManagerの参照
+    [SerializeField] private ButtonsManager buttonsManager;
+
+    // ボタンのデフォルト色
+    [SerializeField] private Color defaultColor = Color.white;
+    // 現在のターゲットボタンを示す色
+    [SerializeField] private Color targetColor = Color.green;
+
+    public GameObject panel;
+
+    // 現在のターゲットボタンのインデックス
+    private int currentTargetIndex = -1;
+
+    // シングルトンインスタンス
+    public static OptiTrackHandler Instance { get; private set; }
+
+    // トリガーフラグ
+    public bool isTriggered { get; private set; } = false;
+
+    private void Awake()
+    {
+        // インスタンスが既に存在する場合は破棄し、存在しない場合はこのインスタンスを設定
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+        }
+        else
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject); // シーンが切り替わっても破棄されないように設定
+        }
+
+        // 全ボタンの初期化と配列への登録
+        buttonImages = new Image[9];
+        buttons = new Button[9];
+        for (int i = 0; i < 9; i++)
+        {
+            string buttonName = "Button (" + (i + 1) + ")";
+            GameObject buttonObj = GameObject.Find(buttonName);
+            if (buttonObj)
+            {
+                buttonImages[i] = buttonObj.GetComponent<Image>();
+                buttons[i] = buttonObj.GetComponent<Button>();
+                buttonImages[i].color = defaultColor;
+            }
+            else
+            {
+                Debug.LogError(buttonName + " not found.");
+            }
+        }
+    }
+
+    // トリガーを発生させるメソッド
+    public void SetTrigger()
+    {
+        isTriggered = true;
+    }
+
+    // トリガーをリセットするメソッド
+    public void ResetTrigger()
+    {
+        isTriggered = false;
+    }
+
     void Start()
     {
+        // 最初のターゲット設定
+        UpdateTargetButton(-1);
+
         // 画面サイズとポインターのスケーリングを設定
         sx = pixelX / midAirDisplay.transform.localScale.x;
         sy = pixelY / midAirDisplay.transform.localScale.y;
@@ -62,47 +129,58 @@ public class OptiTrackHandler : MonoBehaviour
 
     void Update()
     {
-        // OptiTrackのデータ取得処理 (将来の利用のためにコメントアウト)
-        /*
+        if ((isTriggered || Input.GetKeyDown(KeyCode.Return)) && !panel.activeSelf) //指さしのトリガーが来た
+        {
+            TriggeredButton(transform.localPosition);
+            ResetTrigger();
+        }
+
+        //隠し用のパネルを解除
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            Debug.Log("task start");
+            UpdateTargetButton(-1);
+            panel.SetActive(false);
+        }
+
+        /* OptiTrackからマーカ情報を取得し、指さし入力のポインタを表示 */
         if (optitrackClient == null)
         {
-            UnityEngine.Debug.LogError("OptitrackStreamingClient is not assigned.");
+            Debug.LogError("OptitrackStreamingClient is not assigned.");
             return;
         }
 
-        var marker1State = optitrackClient.GetLatestMarkerStates()[0];
-        var marker2State = optitrackClient.GetLatestMarkerStates()[1];
-
+        marker1State = optitrackClient.GetLatestMarkerStates()[0];
+        marker2State = optitrackClient.GetLatestMarkerStates()[1];
         if (marker1State != null && marker2State != null)
         {
-            Vector3 pos1 = marker1State.Position;
-            Vector3 pos2 = marker2State.Position;
+            CalculatePointerPosition(marker1State.Position, marker2State.Position);
 
-            AddToHistory(pos1, pos1History);
-            AddToHistory(pos2, pos2History);
-
-            smoothedPos1 = CalculateSmoothedPosition(pos1History);
-            smoothedPos2 = CalculateSmoothedPosition(pos2History);
-
-            CalculatePointerPosition(smoothedPos1, smoothedPos2);
-
-            if (Input.GetKey(KeyCode.Space))
+            if (Input.GetKey(KeyCode.R))
             {
                 difX = poiPos2d.x;
                 difY = poiPos2d.y;
             }
 
-            transform.localPosition = new Vector3(poiPos2d.x - difX, poiPos2d.y - difY, poiPos2d.z);
+            filteredPointerPos = FilteringPosition(pointerPosHistory);
+            transform.localPosition = new Vector3(filteredPointerPos.x - difX, filteredPointerPos.y - difY, filteredPointerPos.z);
 
-            pushButton(smoothedPos2);
+            if (marker1State.Position.z < marker2State.Position.z)
+            {
+                pushButton(marker2State.Position.z);
+            }
+            else
+            {
+                pushButton(marker1State.Position.z);
+            }
         }
         else
         {
-            UnityEngine.Debug.LogWarning("Marker data not available.");
-        }
-        */
+            Debug.LogWarning("Marker data not available.");
+        }//*/
 
-        // 矢印キーでポインタを動かす
+        /* デバッグ用 */
+        /*// 矢印キーでポインタを動かす
         float moveSpeed = 2.0f;
         if (Input.GetKey(KeyCode.UpArrow))
         {
@@ -122,54 +200,23 @@ public class OptiTrackHandler : MonoBehaviour
         }
 
         // ポインタの位置を更新
-        transform.localPosition = new Vector3(poiPos2d.x - difX, poiPos2d.y - difY, poiPos2d.z);
-
-        // ボタンを押す処理
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-        }
+        transform.localPosition = new Vector3(poiPos2d.x - difX, poiPos2d.y - difY, poiPos2d.z);//*/
     }
 
-    /*void pushButton(Vector3 pos)
+    void pushButton(float zPos)
     {
-        if (previousZpos <= midAirDisplay.transform.position.z && pos.z > midAirDisplay.transform.position.z)
+        Vector2 pushPos = new Vector2(
+            pointerPosHistory.ToArray()[pointerPosHistory.Count - 1].x - difX,
+            pointerPosHistory.ToArray()[pointerPosHistory.Count - 1].y - difY
+            );
+        if (previousZpos <= midAirDisplay.transform.position.z && zPos > midAirDisplay.transform.position.z)
         {
-            if (IsButtonAtPosition(pos))
-            {
-                Begin.correctCount++;
-            }
-            Begin.cnt++;
-            if (Begin.cnt < Begin.testNumInOnce)
-            {
-                buttonObject.GetComponent<PlaceButton>().PlaceButtonRandomly();
-            }
-            else
-            {
-                Begin.stopwatch.Stop();
-                StartCoroutine(Cooldown());
-                buttonObject.SetActive(false);
-            }
+            Debug.Log("pushed!");
+            TriggeredButton(pushPos);
         }
 
-        previousZpos = pos.z;
+        previousZpos = zPos;
     }
-
-    bool IsButtonAtPosition(Vector3 position)
-    {
-        // ボタン位置の検知処理
-        RectTransform buttonRectTransform = midAirButton.GetComponent<RectTransform>();
-
-        Vector3 buttonPosition = midAirButton.transform.localPosition;
-        Vector2 buttonScale = midAirButton.transform.localScale;
-
-        float buttonMinX = buttonPosition.x - buttonScale.x / 2;
-        float buttonMaxX = buttonPosition.x + buttonScale.x / 2;
-        float buttonMinY = buttonPosition.y - buttonScale.y / 2;
-        float buttonMaxY = buttonPosition.y + buttonScale.y / 2;
-
-        return (position.x >= buttonMinX && position.x <= buttonMaxX &&
-                position.y >= buttonMinY && position.y <= buttonMaxY);
-    }*/
 
     void AddToHistory(Vector3 pos, Queue<Vector3> history)
     {
@@ -180,7 +227,7 @@ public class OptiTrackHandler : MonoBehaviour
         history.Enqueue(pos);
     }
 
-    Vector3 CalculateSmoothedPosition(Queue<Vector3> history)
+    Vector3 FilteringPosition(Queue<Vector3> history)
     {
         Vector3 sum = Vector3.zero;
         foreach (Vector3 pos in history)
@@ -204,12 +251,66 @@ public class OptiTrackHandler : MonoBehaviour
         poiPos2d.x = poiPos3d.x * sx;
         poiPos2d.y = (poiPos3d.y - midAirDisplay.transform.position.y) * sy;
         poiPos2d.z = 0;
+
+        AddToHistory(poiPos2d, pointerPosHistory);
     }
 
-    private IEnumerator Cooldown()
+    // ボタンクリックのチェックと処理
+    private void TriggeredButton(Vector2 triggeredPosition)
     {
-        isCooldown = true;
-        yield return new WaitForSeconds(cooldownTime);
-        isCooldown = false;
+        for (int i = 0; i < buttonImages.Length; i++)
+        {
+            if (buttonImages[i] != null && IsPointerInCircle(buttonImages[i], triggeredPosition))
+            {
+                if (i == currentTargetIndex)
+                {
+                    Debug.Log("Correct button clicked: Button (" + (i + 1) + ")");
+                    int previousTargetIndex = buttonsManager.GetNextTargetButton();
+                    if (!buttonsManager.SetNextTask()) // ターゲット・タスクを更新し、全ターゲット・タスクが終了しているなら終了
+                    {
+                        Debug.Log("All tasks completed.");
+                        Application.Quit();
+                    }
+                    else
+                    {
+                        UpdateTargetButton(previousTargetIndex); //ターゲットを更新
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning("Incorrect button clicked: Button (" + (i + 1) + ")");
+                }
+            }
+        }
+    }
+
+    // 現在のターゲットボタンの更新
+    private bool UpdateTargetButton(int prev)
+    {
+        currentTargetIndex = buttonsManager.GetNextTargetButton();
+        if (currentTargetIndex != -1)
+        {
+            //Debug.Log("Current target is Button (" + (currentTargetIndex + 1) + ")");
+            buttonImages[currentTargetIndex].color = targetColor;
+            if (prev != -1)
+            {
+                buttonImages[prev].color = defaultColor;
+            }
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    // ボタンとポインタ位置が円形範囲内にあるかを判定
+    private bool IsPointerInCircle(Image buttonImage, Vector2 pointerPosition)
+    {
+        RectTransform rectTransform = buttonImage.rectTransform;
+        Vector2 buttonCenter = rectTransform.localPosition;
+        Vector2 relativePosition = pointerPosition - buttonCenter;
+
+        return relativePosition.magnitude < (rectTransform.rect.width * 0.42f);
     }
 }

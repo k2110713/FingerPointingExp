@@ -22,6 +22,44 @@ public class PointingHandler : MonoBehaviour
     // 現在のターゲットボタンのインデックス
     private int currentTargetIndex = -1;
 
+    // シングルトンインスタンス
+    public static PointingHandler Instance { get; private set; }
+
+    // トリガーフラグ
+    public int isTriggered { get; private set; } = 0;
+
+    private void Awake()
+    {
+        // インスタンスが既に存在する場合は破棄し、存在しない場合はこのインスタンスを設定
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+        }
+        else
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject); // シーンが切り替わっても破棄されないように設定
+        }
+    }
+
+    // トリガーを発生させるメソッド
+    public void TouchingTrigger()
+    {
+        isTriggered = 1;
+    }
+
+    // トリガーを発生させるメソッド
+    public void PointingTrigger()
+    {
+        isTriggered = 2;
+    }
+
+    // トリガーをリセットするメソッド
+    public void ResetTrigger()
+    {
+        isTriggered = 0;
+    }
+
     void Start()
     {
         // ボタンの初期化と最初のターゲット設定
@@ -31,15 +69,21 @@ public class PointingHandler : MonoBehaviour
 
     void Update()
     {
-        //if ((CopperSwitch.Instance.isTriggered || Input.GetKeyDown(KeyCode.Return)) && panel.activeSelf) //タップ検出（デバッグも）
-        if (Input.GetKeyDown(KeyCode.Return) && panel.activeSelf)
+        if ((isTriggered == 1 || Input.GetKeyDown(KeyCode.Return)) && !panel.activeSelf) //タップ検出（デバッグも）
         {
-            CheckAndProcessButtonClick();
+            CheckButtonTouching();
+            ResetTrigger();
+        }
+        if ((isTriggered == 2 || Input.GetKeyDown(KeyCode.Return)) && !panel.activeSelf) //タップ検出（デバッグも）
+        {
+            //CheckButtonPointing();
+            ResetTrigger();
         }
 
         //隠し用のパネルを解除
         if (Input.GetKeyDown(KeyCode.Space))
         {
+            Debug.Log("task start");
             panel.SetActive(false);
         }
     }
@@ -68,7 +112,7 @@ public class PointingHandler : MonoBehaviour
     }
 
     // ボタンクリックのチェックと処理
-    private void CheckAndProcessButtonClick()
+    private void CheckButtonTouching()
     {
         for (int i = 0; i < buttonImages.Length; i++)
         {
