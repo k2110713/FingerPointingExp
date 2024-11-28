@@ -13,6 +13,7 @@ public enum InputMethod
 public class WriteToCSV : MonoBehaviour
 {
     public string subjectName = "unknown";
+    private LogToCSV logToCSV;
     public InputMethod inputMethod;
     private string filePath;
     private string formattedDate;
@@ -23,8 +24,15 @@ public class WriteToCSV : MonoBehaviour
 
     void Start()
     {
+        // LogToCSVコンポーネントを取得
+        logToCSV = FindObjectOfType<LogToCSV>();
+        if (logToCSV != null)
+        {
+            logToCSV.SetSubjectName(subjectName); // LogToCSVにsubjectNameを渡す
+        }
+
         CanvasRenderer canvasRenderer = pointer.GetComponent<CanvasRenderer>();
-        if (inputMethod == 0)
+        if (inputMethod == InputMethod.Touching)
         {
             canvasRenderer.cull = true;
         }

@@ -1,0 +1,151 @@
+Time,LogType,Message
+2024-11-28 13:41:30.902,Warning,DontDestroyOnLoad only works for root GameObjects or components on root GameObjects.
+2024-11-28 13:41:31.030,Log,"Task (1) Order: 4, 8, 3, 7, 2, 6, 1, 5, 9"
+2024-11-28 13:41:31.032,Error,Failed to open serial port: The port `COM4' does not exist.
+2024-11-28 13:41:31.252,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:31.844,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:31.883,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:31.907,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:31.925,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:31.937,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:31.949,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:31.971,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:31.993,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.022,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.048,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.062,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.084,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.101,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.120,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.134,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.152,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.169,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.195,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.212,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.227,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.264,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.285,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.305,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.324,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.347,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.366,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.381,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.409,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.440,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.457,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.484,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.499,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.521,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.541,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.566,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.581,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.611,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.626,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.658,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.676,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.703,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.720,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.734,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.759,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.787,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.802,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.829,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.831,Log,OptitrackStreamingClient: Receiving streaming data from the server.
+2024-11-28 13:41:32.849,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.863,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.892,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.909,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.927,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.942,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.958,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:32.986,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:33.002,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:33.030,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:33.047,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:33.075,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:33.093,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:33.111,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:33.125,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:33.140,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:33.210,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:33.224,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:33.245,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:33.262,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:33.287,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:33.314,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:33.336,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:33.355,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"
+2024-11-28 13:41:33.405,Exception,"ArgumentOutOfRangeException: Index was out of range. Must be non-negative and less than the size of the collection.
+Parameter name: index"

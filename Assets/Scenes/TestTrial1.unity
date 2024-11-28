@@ -1703,7 +1703,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   subjectName: test
-  inputMethod: 0
+  inputMethod: 1
   pointer: {fileID: 605280633}
 --- !u!1 &1104067404
 GameObject:

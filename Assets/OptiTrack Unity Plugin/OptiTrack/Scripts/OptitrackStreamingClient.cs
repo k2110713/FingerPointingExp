@@ -960,10 +960,15 @@ public class OptitrackStreamingClient : MonoBehaviour
         }
         catch (Exception ex)
         {
-            Debug.LogException(ex, this);
-            Debug.LogError(GetType().FullName + ": Error connecting to server; check your configuration, and make sure the server is currently streaming.", this);
-            this.enabled = false;
+            Debug.LogError($"初回接続エラー: {ex.Message}");
             return;
+
+            // 再接続試行
+            /*if (!TryReconnect(3, 2000, connType, localAddr, serverAddr)) // 最大3回再試行, 2秒間隔
+            {
+                this.enabled = false; // 最終的に無効化
+                return;
+            }//*/
         }
 
         m_client.NativeFrameReceived += OnNatNetFrameReceived;
