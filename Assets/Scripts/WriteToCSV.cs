@@ -12,82 +12,61 @@ public enum InputMethod
 
 public class WriteToCSV : MonoBehaviour
 {
-    public string subjectName = "unknown";
-    private LogToCSV logToCSV;
+    public string subjectName = "unknown"; // デフォルトの名前
     public InputMethod inputMethod;
-    private string filePath;
+    private string projectRoot = Application.dataPath + "/.."; // Assetsフォルダの親ディレクトリ
+    private string experimentFilePath;
+    private string logFilePath;
+    private string infoFilePath;
     private string formattedDate;
     private float radius;
     private DateTime startTime;
-    public GameObject pointer;
-    private string projectRoot = Application.dataPath + "/.."; // Assetsフォルダの親ディレクトリ
+    private LogType logType = LogType.Log;
 
     void Start()
     {
-        // LogToCSVコンポーネントを取得
-        logToCSV = FindObjectOfType<LogToCSV>();
-        if (logToCSV != null)
-        {
-            logToCSV.SetSubjectName(subjectName); // LogToCSVにsubjectNameを渡す
-        }
+        // formattedDateを一度だけ宣言し、すべてのファイルに同じ日時を使用
+        formattedDate = DateTime.Now.ToString("yyyyMMdd_HHmmss");
 
-        CanvasRenderer canvasRenderer = pointer.GetComponent<CanvasRenderer>();
-        if (inputMethod == InputMethod.Touching)
-        {
-            canvasRenderer.cull = true;
-        }
-        else
-        {
-            canvasRenderer.cull = false;
-        }
+        // ログファイルと実験結果ファイルのパスを設定
+        SetupLogFile();
+        SetupExperimentFile();
+
+        // 実験結果ログにヘッダーを追加
+        File.AppendAllText(experimentFilePath, "ElapsedTime,TaskNumber,TargetNumber\n");
     }
 
-    public void SetupFile(float radius)
+    // ログファイルのセットアップ（ログの内容をCSVに記録）
+    private void SetupLogFile()
     {
-        this.radius = radius;
-        DateTime now = DateTime.Now;
-        formattedDate = now.ToString("yyyyMMddHHmm");
+        logFilePath = Path.Combine(projectRoot, "MyLogs", $"{subjectName}_Log_{formattedDate}.csv");
+
+        // ヘッダーを追加
+        File.AppendAllText(logFilePath, "Time,LogType,Message\n");
+
+        // ログイベントにリスナーを登録
+        Application.logMessageReceived += HandleLog;
+    }
+
+    // 実験結果ファイルのセットアップ（結果をCSVに記録）
+    private void SetupExperimentFile()
+    {
         string method = inputMethod.ToString();
-        string fileName = $"{subjectName}_{formattedDate}_{radius}_{method}.csv";
-        filePath = Path.Combine(projectRoot, "results", fileName);
+        experimentFilePath = Path.Combine(projectRoot, "results", $"{subjectName}_Experiment_{formattedDate}_Radius{radius}_{method}.csv");
 
-        if (!File.Exists(filePath))
-        {
-            using (StreamWriter file = new StreamWriter(filePath, false, Encoding.UTF8))
-            {
-                file.WriteLine("ElapsedTime,TaskNumber,TargetNumber");
-            }
-        }
-
-        startTime = DateTime.Now;  // タスクのストップウォッチを開始
+        // ヘッダーを追加
+        File.AppendAllText(experimentFilePath, "ElapsedTime,TaskNumber,TargetNumber\n");
     }
 
-    public void LogData(int taskNumber, int targetNumber)
+    // 実験情報ファイルのセットアップ（実験情報を記録）
+    public void SetupExperimentInfoFile(List<List<int>> allTaskOrders)
     {
-        TimeSpan elapsedTime = DateTime.Now - startTime;
-        string line = $"{elapsedTime.TotalSeconds},{taskNumber},{targetNumber}";
+        string infoFileName = $"{subjectName}_Info_{formattedDate}_Radius{radius}.csv";
+        infoFilePath = Path.Combine(projectRoot, "results", infoFileName);
 
         try
         {
-            using (StreamWriter file = new StreamWriter(filePath, true, Encoding.UTF8))
-            {
-                file.WriteLine(line);
-            }
-        }
-        catch (Exception e)
-        {
-            Debug.LogError($"Failed to write to file {filePath}: {e.Message}");
-        }
-    }
-
-    public void LogExperimentInfo(List<List<int>> allTaskOrders)
-    {
-        string infoFileName = $"{subjectName}_{formattedDate}_{radius}_{inputMethod}_info.csv";
-        string infoPath = Path.Combine(projectRoot, "results", infoFileName);
-
-        try
-        {
-            using (StreamWriter file = new StreamWriter(infoPath, false, Encoding.UTF8))
+            using (StreamWriter file = new StreamWriter(infoFilePath, false, Encoding.UTF8))
             {
                 file.WriteLine($"SubjectName,{subjectName}");
                 file.WriteLine($"Date,{formattedDate}");
@@ -104,7 +83,70 @@ public class WriteToCSV : MonoBehaviour
         }
         catch (Exception e)
         {
-            Debug.LogError($"Failed to write experiment info to file {infoPath}: {e.Message}");
+            Debug.LogError($"Failed to write experiment info to file {infoFilePath}: {e.Message}");
         }
+    }
+
+    // タスクデータの記録（実験結果をCSVに書き込む）
+    public void LogData(int taskNumber, int targetNumber)
+    {
+        TimeSpan elapsedTime = DateTime.Now - startTime;
+        string line = $"{elapsedTime.TotalSeconds},{taskNumber},{targetNumber}";
+
+        try
+        {
+            using (StreamWriter file = new StreamWriter(experimentFilePath, true, Encoding.UTF8))
+            {
+                file.WriteLine(line);
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to write to file {experimentFilePath}: {e.Message}");
+        }
+    }
+
+    // 実験開始時に呼ばれる（開始時間の設定）
+    public void SetupFile(float radius)
+    {
+        this.radius = radius;
+        startTime = DateTime.Now;  // タスクのストップウォッチを開始
+    }
+
+    // ログイベントをCSVに記録（エラーログやデバッグログなど）
+    private void HandleLog(string logString, string stackTrace, LogType type)
+    {
+        // 現在の時間をミリ秒まで取得
+        string time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+
+        // CSVフォーマットに整形
+        string logEntry = $"{time},{type},{EscapeForCSV(logString)}\n";
+
+        // ログをファイルに書き込む
+        try
+        {
+            File.AppendAllText(logFilePath, logEntry);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to write to log file {logFilePath}: {e.Message}");
+        }
+    }
+
+    // CSVフォーマットに適したエスケープ処理
+    private string EscapeForCSV(string value)
+    {
+        if (value.Contains(",") || value.Contains("\"") || value.Contains("\n"))
+        {
+            value = value.Replace("\"", "\"\"");
+            value = $"\"{value}\"";
+        }
+        return value;
+    }
+
+    // リスナーの解除
+    private void OnDestroy()
+    {
+        Application.logMessageReceived -= HandleLog;
     }
 }
