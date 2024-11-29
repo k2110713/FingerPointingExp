@@ -1095,7 +1095,11 @@ GameObject:
   - component: {fileID: 605280634}
   - component: {fileID: 605280638}
   - component: {fileID: 605280637}
+  - component: {fileID: 605280643}
   - component: {fileID: 605280640}
+  - component: {fileID: 605280642}
+  - component: {fileID: 605280641}
+  - component: {fileID: 605280644}
   m_Layer: 5
   m_Name: 2DPointer
   m_TagString: Untagged
@@ -1164,7 +1168,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 605280633}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 1ecd6a5a893759e4880481d8fe9e82b8, type: 3}
   m_Name: 
@@ -1177,6 +1181,103 @@ MonoBehaviour:
   difY: 287.2
   marker1ID: 1
   marker2ID: 2
+  buttonImages: []
+  buttons: []
+  buttonsManager: {fileID: 1356037991}
+  defaultColor: {r: 1, g: 1, b: 1, a: 1}
+  targetColor: {r: 0, g: 1, b: 0, a: 1}
+  panel: {fileID: 1017272928}
+--- !u!114 &605280641
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 605280633}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 20180aa06647008448bbc9e712772775, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  midAirDisplay: {fileID: 189365429}
+  optitrackClient: {fileID: 939361582}
+  serialHandler: {fileID: 605280643}
+  pixelX: 3840
+  pixelY: 2160
+  difX: 111.8
+  difY: 287.2
+  marker1ID: 1
+  marker2ID: 2
+  buttonImages: []
+  buttons: []
+  buttonsManager: {fileID: 1356037991}
+  defaultColor: {r: 1, g: 1, b: 1, a: 1}
+  targetColor: {r: 0, g: 1, b: 0, a: 1}
+  panel: {fileID: 1017272928}
+  magneticRadius: 250
+  pullStrength: 0.4
+--- !u!114 &605280642
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 605280633}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 74c2b7d74dad4af4cb0175b4541f2b36, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  midAirDisplay: {fileID: 189365429}
+  optitrackClient: {fileID: 939361582}
+  pixelX: 3840
+  pixelY: 2160
+  difX: 111.8
+  difY: 287.2
+  marker1ID: 1
+  marker2ID: 2
+  buttonImages: []
+  buttons: []
+  buttonsManager: {fileID: 1356037991}
+  defaultColor: {r: 1, g: 1, b: 1, a: 1}
+  targetColor: {r: 0, g: 1, b: 0, a: 1}
+  panel: {fileID: 1017272928}
+--- !u!114 &605280643
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 605280633}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7806a8c25770a0c44a5e6463349b9f34, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  portName: COM4
+  baudRate: 9600
+--- !u!114 &605280644
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 605280633}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b031608f4e10c3458874eb57bb8c49e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  midAirDisplay: {fileID: 189365429}
+  optitrackClient: {fileID: 939361582}
+  serialHandler: {fileID: 605280643}
+  pixelX: 2840
+  pixelY: 2160
+  coefficientX: 2
+  coefficientY: 2
+  difX: 111.8
+  difY: 287.2
+  marker1ID: 1
   buttonImages: []
   buttons: []
   buttonsManager: {fileID: 1356037991}
@@ -1702,8 +1803,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 09b6975f739d15f4f9b8efa16922e60f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  subjectName: test
-  inputMethod: 1
+  subjectName: test00
   pointer: {fileID: 605280633}
 --- !u!1 &1104067404
 GameObject:
@@ -2184,7 +2284,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   setCount: 1
   buttonCount: 9
-  radius: 400
+  radius: 800
   panel: {fileID: 1017272928}
   csvWriter: {fileID: 1024413189}
 --- !u!224 &1356037992
@@ -3086,42 +3186,13 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2076270259}
-  - component: {fileID: 2076270258}
-  - component: {fileID: 2076270257}
   m_Layer: 0
   m_Name: SerialHandler
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &2076270257
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2076270256}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 528ded14966361b4f81f017d3f490c90, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  serialHandler: {fileID: 2076270258}
---- !u!114 &2076270258
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2076270256}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7806a8c25770a0c44a5e6463349b9f34, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  portName: COM4
-  baudRate: 9600
+  m_IsActive: 0
 --- !u!4 &2076270259
 Transform:
   m_ObjectHideFlags: 0

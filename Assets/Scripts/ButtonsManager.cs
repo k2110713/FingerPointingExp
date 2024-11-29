@@ -134,20 +134,20 @@ public class ButtonsManager : MonoBehaviour
     {
         if (currentTargetIndex < buttonCount - 1)
         {
-            csvWriter.LogData(currentTaskIndex, allTaskOrders[currentTaskIndex][currentTargetIndex]);
+            csvWriter.LogExperimentResult(currentTaskIndex, allTaskOrders[currentTaskIndex][currentTargetIndex]);
             currentTargetIndex++;
             return true;
         }
         else if (currentTaskIndex < allTaskOrders.Count - 1)
         {
-            csvWriter.LogData(currentTaskIndex, allTaskOrders[currentTaskIndex][currentTargetIndex]);
+            csvWriter.LogExperimentResult(currentTaskIndex, allTaskOrders[currentTaskIndex][currentTargetIndex]);
             currentTaskIndex++;
             currentTargetIndex = 0;
             panel.SetActive(true);
             SetTaskOrder(currentTaskIndex);
             return true;
         }
-        csvWriter.LogData(currentTaskIndex, allTaskOrders[currentTaskIndex][currentTargetIndex]);
+        csvWriter.LogExperimentResult(currentTaskIndex, allTaskOrders[currentTaskIndex][currentTargetIndex]);
         return false; // すべてのタスクが終了
     }
 }

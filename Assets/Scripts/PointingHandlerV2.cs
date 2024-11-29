@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PointingHandler : MonoBehaviour
+public class PointingHandlerV2 : MonoBehaviour
 {
     public GameObject midAirDisplay;
     public OptitrackStreamingClient optitrackClient;
@@ -13,17 +13,18 @@ public class PointingHandler : MonoBehaviour
     public float pixelY = 1080;
 
     OptitrackMarkerState marker1State;
-    OptitrackMarkerState marker2State;
 
-    private const int BufferSize = 10;
+    private const int BufferSize = 1;
     private Queue<Vector3> pointerPosHistory = new Queue<Vector3>();
     private Vector3 filteredPointerPos = Vector3.zero;
 
     private float sx;
     private float sy;
+    public float coefficientX = 1.0f;
+    public float coefficientY = 1.0f;
     private Vector3 poiPos2d = Vector3.zero;
 
-    public float difX = 0, difY = 0;
+    public float difX = 111.8f, difY = 287.2f;
 
     float t = 0.0f;
 
@@ -34,7 +35,6 @@ public class PointingHandler : MonoBehaviour
     float a, b, c, d;
 
     public int marker1ID = 1;
-    public int marker2ID = 2;
 
     [SerializeField] private Image[] buttonImages;
     [SerializeField] private Button[] buttons;
@@ -46,9 +46,6 @@ public class PointingHandler : MonoBehaviour
     public GameObject panel;
 
     private int currentTargetIndex = -1;
-
-    public float magneticRadius = 200.0f; // 磁気が作用する範囲
-    public float pullStrength = 0.001f;    // 磁気の引っ張る強さ (0.0 - 1.0)
 
     private void Awake()
     {
@@ -86,17 +83,6 @@ public class PointingHandler : MonoBehaviour
 
         sx = pixelX / midAirDisplay.transform.localScale.x;
         sy = pixelY / midAirDisplay.transform.localScale.y;
-
-        p1.z = -midAirDisplay.transform.position.z; p2.z = -midAirDisplay.transform.position.z; p3.z = -midAirDisplay.transform.position.z;
-
-        Vector3 AB = p2 - p1;
-        Vector3 AC = p3 - p1;
-        Vector3 normal = Vector3.Cross(AB, AC);
-
-        a = normal.x;
-        b = normal.y;
-        c = normal.z;
-        d = -(a * p1.x + b * p1.y + c * p1.z);
     }
 
     void Update()
@@ -119,66 +105,24 @@ public class PointingHandler : MonoBehaviour
         }
 
         marker1State = optitrackClient.GetLatestMarkerStates()[0];
-        marker2State = optitrackClient.GetLatestMarkerStates()[1];
-        if (marker1State != null && marker2State != null)
+        if (marker1State != null)
         {
-            CalculatePointerPosition(marker1State.Position, marker2State.Position);
+            CalculatePointerPosition(marker1State.Position);
 
             if (Input.GetKey(KeyCode.R))
             {
-                difX = poiPos2d.x;
-                difY = poiPos2d.y;
+                difX = marker1State.Position.x * sx;
+                difY = (marker1State.Position.y - midAirDisplay.transform.position.y) * sy;
             }
 
             filteredPointerPos = FilteringPosition(pointerPosHistory);
-            transform.localPosition = new Vector3(filteredPointerPos.x - difX, filteredPointerPos.y - difY, filteredPointerPos.z);
-            //ApplyMagneticPull(FilteringPosition(pointerPosHistory));
+            transform.localPosition = filteredPointerPos;
         }
         else
         {
             Debug.LogWarning("Marker data not available.");
         }
     }
-
-    //リダイレクション（磁気的にポインタを引っ張る）
-    private void ApplyMagneticPull(Vector3 poipos)
-    {
-        RectTransform nearestButton = null;
-        float nearestDistance = float.MaxValue;
-
-        // 最も近いボタンを探す
-        foreach (var buttonImage in buttonImages)
-        {
-            if (buttonImage == null) continue;
-
-            RectTransform rectTransform = buttonImage.rectTransform;
-            Vector2 buttonCenter = rectTransform.localPosition;
-
-            float distance = Vector2.Distance(buttonCenter, poipos);
-
-            if (distance < nearestDistance)
-            {
-                nearestDistance = distance;
-                nearestButton = rectTransform;
-            }
-        }
-
-        // 最も近いボタンが磁気範囲内の場合に引っ張りを適用
-        if (nearestButton != null && nearestDistance <= magneticRadius)
-        {
-            Vector2 buttonCenter = nearestButton.localPosition;
-            Vector2 newPosition = Vector2.Lerp(poipos, buttonCenter, pullStrength);
-
-            // ポインターの位置を更新
-            transform.localPosition = new Vector3(newPosition.x, newPosition.y, 0.0f);
-        }
-        else
-        {
-            // 磁気範囲外では元の位置を保持
-            transform.localPosition = poipos;
-        }
-    }
-
 
     void OnDataReceived(string message)
     {
@@ -216,21 +160,13 @@ public class PointingHandler : MonoBehaviour
         return sum / history.Count;
     }
 
-    void CalculatePointerPosition(Vector3 pos1, Vector3 pos2)
+    void CalculatePointerPosition(Vector3 pos1)
     {
-        t = (d - (a * pos1.x + b * pos1.y + c * pos1.z))
-            / (a * (pos2.x - pos1.x) + b * (pos2.y - pos1.y) + c * (pos2.z - pos1.z));
-
-        Vector3 poiPos3d = new Vector3(
-            pos1.x + t * (pos2.x - pos1.x),
-            pos1.y + t * (pos2.y - pos1.y),
-            pos1.z + t * (pos2.z - pos1.z)
-        );
-
-        poiPos2d.x = poiPos3d.x * sx;
-        poiPos2d.y = (poiPos3d.y - midAirDisplay.transform.position.y) * sy;
+        poiPos2d.x = (pos1.x * sx - difX) * coefficientX;
+        poiPos2d.y = ((pos1.y - midAirDisplay.transform.position.y) * sy - difY) * coefficientY;
         poiPos2d.z = 0;
 
+        //transform.localPosition = poiPos2d;
         AddToHistory(poiPos2d, pointerPosHistory);
     }
 
