@@ -15,17 +15,22 @@ public class WriteToCSV : MonoBehaviour
     private string method;
     private DateTime startTime;
     private string projectRoot = Application.dataPath + "/.."; // Assetsフォルダの親ディレクトリ
+    private string debugLogFilePath;
 
     void Start()
     {
-        // ゲームオブジェクトにアタッチされている全てのMonoBehaviourスクリプトを取得
+        // ログ記録用ファイルのセットアップ
+        SetupDebugLogFile();
+
+        // Unityのログイベントをリッスン
+        Application.logMessageReceived += LogDebugMessages;
+
+        // 以下、既存コード
         MonoBehaviour[] scripts = pointer.GetComponents<MonoBehaviour>();
 
-        // TouchingHandler と PointingHandler が存在するか確認
         bool hasTouchingHandler = scripts.OfType<TouchingHandler>().Any();
         bool hasPointingHandler = scripts.OfType<PointingHandler>().Any();
 
-        // TouchingHandlerが存在すればその状態を処理
         if (hasTouchingHandler)
         {
             var touchingHandler = scripts.OfType<TouchingHandler>().First();
@@ -35,7 +40,6 @@ public class WriteToCSV : MonoBehaviour
             }
         }
 
-        // PointingHandlerが存在すればその状態を処理
         if (hasPointingHandler)
         {
             var pointingHandler = scripts.OfType<PointingHandler>().First();
@@ -45,6 +49,54 @@ public class WriteToCSV : MonoBehaviour
             }
         }
     }
+
+    private void SetupDebugLogFile()
+    {
+        DateTime now = DateTime.Now;
+        formattedDate = now.ToString("yyyyMMddHHmmss");
+        debugLogFilePath = Path.Combine(projectRoot, "logs", $"{subjectName}_{formattedDate}_debug.csv");
+
+        if (!Directory.Exists(Path.Combine(projectRoot, "logs")))
+        {
+            Directory.CreateDirectory(Path.Combine(projectRoot, "logs"));
+        }
+
+        // ヘッダー行を作成
+        if (!File.Exists(debugLogFilePath))
+        {
+            using (StreamWriter file = new StreamWriter(debugLogFilePath, false, Encoding.UTF8))
+            {
+                file.WriteLine("Timestamp,LogType,Message");
+            }
+        }
+    }
+
+    private void LogDebugMessages(string condition, string stackTrace, LogType type)
+    {
+        string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+        string logType = type.ToString();
+        string logMessage = $"{condition.Replace(",", ";")}";
+
+        try
+        {
+            using (StreamWriter file = new StreamWriter(debugLogFilePath, true, Encoding.UTF8))
+            {
+                file.WriteLine($"{timestamp},{logType},{logMessage}");
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to write debug log to file {debugLogFilePath}: {e.Message}");
+        }
+    }
+
+    private void OnDestroy()
+    {
+        // ログイベントを解除
+        Application.logMessageReceived -= LogDebugMessages;
+    }
+
+    // 既存のCSV書き込みコード（省略）
 
     public void SetupFile(float radius)
     {
@@ -62,7 +114,7 @@ public class WriteToCSV : MonoBehaviour
             }
         }
 
-        startTime = DateTime.Now;  // タスクのストップウォッチを開始
+        startTime = DateTime.Now; // タスクのストップウォッチを開始
     }
 
     public void LogExperimentResult(int taskNumber, int targetNumber)

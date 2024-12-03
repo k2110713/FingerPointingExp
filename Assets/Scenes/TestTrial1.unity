@@ -1204,6 +1204,7 @@ MonoBehaviour:
   serialHandler: {fileID: 605280643}
   pixelX: 3840
   pixelY: 2160
+  BufferSize: 8
   difX: 111.8
   difY: 287.2
   marker1ID: 1
@@ -1803,7 +1804,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 09b6975f739d15f4f9b8efa16922e60f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  subjectName: test00
+  subjectName: fuji
   pointer: {fileID: 605280633}
 --- !u!1 &1104067404
 GameObject:
@@ -2284,7 +2285,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   setCount: 1
   buttonCount: 9
-  radius: 800
+  radius: 400
   panel: {fileID: 1017272928}
   csvWriter: {fileID: 1024413189}
 --- !u!224 &1356037992

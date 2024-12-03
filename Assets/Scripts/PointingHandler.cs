@@ -15,7 +15,7 @@ public class PointingHandler : MonoBehaviour
     OptitrackMarkerState marker1State;
     OptitrackMarkerState marker2State;
 
-    private const int BufferSize = 10;
+    public int BufferSize = 1;
     private Queue<Vector3> pointerPosHistory = new Queue<Vector3>();
     private Vector3 filteredPointerPos = Vector3.zero;
 
